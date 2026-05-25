@@ -1,0 +1,20 @@
+{
+  "name": "growth-second-brain",
+  "version": "0.0.1",
+  "private": true,
+  "description": "成长第二大脑 — 个人知识资产与成长交流平台",
+  "scripts": {
+    "dev:web": "pnpm --filter @gsb/web dev",
+    "dev:api": "pnpm --filter @gsb/api start:dev",
+    "dev": "pnpm run --parallel dev:web dev:api",
+    "build:web": "pnpm --filter @gsb/web build",
+    "build:api": "pnpm --filter @gsb/api build",
+    "build": "pnpm run build:web && pnpm run build:api",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
