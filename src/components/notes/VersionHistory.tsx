@@ -45,7 +45,6 @@ export default function VersionHistory({
   const handleRevert = async (versionId: number) => {
     setReverting(versionId);
     await onRevert(versionId);
-    // 重新加载版本列表
     const res = await fetch(`/api/notes/${noteId}/versions`);
     const data = await res.json();
     setVersions(data.versions || []);
@@ -61,55 +60,114 @@ export default function VersionHistory({
   }
 
   if (versions.length === 0) {
-    return <p className="text-gray-400 text-center py-8">暂无版本记录</p>;
+    return (
+      <div className="text-center py-8 text-stone-400">
+        <div className="text-4xl mb-3">📋</div>
+        <p className="text-sm">暂无版本记录</p>
+        <p className="text-xs text-stone-300 mt-1">
+          保存笔记后，版本历史将显示在这里
+        </p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-3">
-      {selectedIds.length === 2 && (
-        <Button size="sm" onClick={handleCompare}>
-          对比选中版本
-        </Button>
-      )}
-      <div className="space-y-2">
-        {versions.map((v) => (
-          <div
-            key={v.id}
-            className={`border rounded-lg p-3 flex items-center justify-between ${
-              selectedIds.includes(v.id) ? "border-emerald-400 bg-emerald-50" : "border-gray-200"
-            }`}
+      {/* 对比操作栏 */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <p className="text-sm text-stone-500 flex-1">
+          {selectedIds.length === 0
+            ? "选择两个版本进行对比"
+            : selectedIds.length === 1
+            ? "再选择一个版本"
+            : "已选择两个版本"}
+        </p>
+        {selectedIds.length === 2 && (
+          <Button size="sm" onClick={handleCompare}>
+            对比选中版本
+          </Button>
+        )}
+        {selectedIds.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds([])}
           >
-            <div className="flex items-center gap-3 flex-1">
-              <input
-                type="checkbox"
-                checked={selectedIds.includes(v.id)}
-                onChange={() => toggleSelect(v.id)}
-                className="rounded"
+            取消选择
+          </Button>
+        )}
+      </div>
+
+      {/* 时间轴版本列表 */}
+      <div className="relative pl-6 space-y-0">
+        {/* 垂直线 */}
+        <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-stone-100" />
+
+        {versions.map((v, index) => {
+          const isSelected = selectedIds.includes(v.id);
+          const isLatest = index === 0;
+          return (
+            <div key={v.id} className="relative pb-5 last:pb-0">
+              {/* 圆点 */}
+              <button
+                onClick={() => toggleSelect(v.id)}
+                className={`absolute -left-[19px] top-1.5 w-3.5 h-3.5 rounded-full border-2 transition-all duration-200
+                  ${
+                    isSelected
+                      ? "bg-emerald-500 border-emerald-500 shadow-sm shadow-emerald-200"
+                      : isLatest
+                      ? "bg-emerald-400 border-emerald-400"
+                      : "bg-white border-stone-300 hover:border-emerald-400"
+                  }`}
+                aria-label={`选择版本 v${v.versionNumber}`}
               />
-              <div>
-                <p className="text-sm font-medium">
-                  v{v.versionNumber}
-                  {v.commitMessage && (
-                    <span className="text-gray-500 ml-2 font-normal">
-                      — {v.commitMessage}
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {new Date(v.createdAt).toLocaleString("zh-CN")}
-                </p>
+
+              {/* 版本卡片 */}
+              <div
+                className={`rounded-xl border p-3.5 transition-all duration-200
+                  ${
+                    isSelected
+                      ? "border-emerald-300 bg-emerald-50/50 shadow-sm"
+                      : "border-stone-200 bg-white hover:border-stone-300"
+                  }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-stone-700 flex items-center gap-2">
+                      v{v.versionNumber}
+                      {isLatest && (
+                        <span className="text-[10px] font-medium bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full">
+                          当前
+                        </span>
+                      )}
+                    </p>
+                    {v.commitMessage && (
+                      <p className="text-xs text-stone-500 mt-0.5 truncate">
+                        {v.commitMessage}
+                      </p>
+                    )}
+                    <p className="text-xs text-stone-400 mt-1">
+                      {new Date(v.createdAt).toLocaleString("zh-CN", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRevert(v.id)}
+                    disabled={reverting === v.id}
+                  >
+                    {reverting === v.id ? "回退中..." : "回退"}
+                  </Button>
+                </div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleRevert(v.id)}
-              disabled={reverting === v.id}
-            >
-              {reverting === v.id ? "回退中..." : "回退"}
-            </Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

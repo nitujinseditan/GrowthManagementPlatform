@@ -10,6 +10,12 @@ interface ChatPanelProps {
   noteId: number;
 }
 
+const SUGGESTED_QUESTIONS = [
+  { icon: "🔍", text: "帮我复盘这篇笔记" },
+  { icon: "💡", text: "提炼关键知识点" },
+  { icon: "🎯", text: "制定一个行动计划" },
+];
+
 export default function ChatPanel({ noteId }: ChatPanelProps) {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [conversationId, setConversationId] = useState<number | null>(null);
@@ -18,7 +24,7 @@ export default function ChatPanel({ noteId }: ChatPanelProps) {
   const [initLoading, setInitLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // 初始化：加载或创建对话
+  // 初始化
   useEffect(() => {
     fetch(`/api/notes/${noteId}/ai/conversations`)
       .then((r) => r.json())
@@ -50,13 +56,12 @@ export default function ChatPanel({ noteId }: ChatPanelProps) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || !conversationId) return;
+  const handleSend = async (text?: string) => {
+    const content = (text || input).trim();
+    if (!content || !conversationId) return;
     setLoading(true);
-    const content = input.trim();
     setInput("");
 
-    // 乐观更新用户消息
     const tempUserMsg: AIMessage = {
       id: Date.now(),
       conversationId,
@@ -106,36 +111,92 @@ export default function ChatPanel({ noteId }: ChatPanelProps) {
 
   return (
     <div className="flex flex-col h-[500px]">
+      {/* 顶部 */}
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-medium text-gray-900">AI 成长教练</h4>
+        <h4 className="font-semibold text-stone-900 flex items-center gap-2">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-50">
+            <span className="text-sm">🤖</span>
+          </span>
+          AI 成长教练
+        </h4>
         <Button variant="ghost" size="sm" onClick={handleNewConversation}>
           新对话
         </Button>
       </div>
-      <div className="flex-1 overflow-y-auto space-y-3 mb-3 border rounded-lg p-3 bg-gray-50">
+
+      {/* 消息区域 */}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-3 rounded-xl p-4 bg-stone-50/50 border border-stone-100">
         {messages.length === 0 && (
-          <p className="text-gray-400 text-center py-8 text-sm">
-            和 AI 教练聊聊这篇笔记吧！我可以帮你复盘、梳理知识点、发现成长方向。
-          </p>
+          <div className="text-center py-6">
+            <p className="text-stone-400 text-sm mb-1">
+              和 AI 教练聊聊这篇笔记吧
+            </p>
+            <p className="text-stone-300 text-xs mb-4">
+              我可以帮你复盘、梳理知识点、发现成长方向
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <button
+                  key={q.text}
+                  onClick={() => handleSend(q.text)}
+                  disabled={loading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-stone-200 text-sm text-stone-600 hover:border-emerald-300 hover:text-emerald-700 transition-all disabled:opacity-50"
+                >
+                  <span>{q.icon}</span>
+                  {q.text}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
+
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${
+              msg.role === "user" ? "justify-end" : "justify-start"
+            } animate-fade-in-up`}
           >
+            {msg.role === "assistant" && (
+              <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs mr-2 mt-1 shrink-0">
+                🤖
+              </div>
+            )}
             <div
-              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+              className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-emerald-500 text-white"
-                  : "bg-white border border-gray-200 text-gray-700"
+                  ? "bg-emerald-500 text-white rounded-br-md shadow-sm"
+                  : "bg-white border border-stone-200 text-stone-700 rounded-bl-md shadow-sm"
               }`}
             >
               {msg.content}
             </div>
+            {msg.role === "user" && (
+              <div className="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center text-xs ml-2 mt-1 shrink-0">
+                👤
+              </div>
+            )}
           </div>
         ))}
+
+        {/* AI 输入中指示器 */}
+        {loading && (
+          <div className="flex justify-start animate-fade-in-up">
+            <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-xs mr-2 mt-1 shrink-0">
+              🤖
+            </div>
+            <div className="bg-white border border-stone-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
+
+      {/* 输入区域 */}
       <div className="flex gap-2">
         <Textarea
           value={input}
@@ -150,11 +211,12 @@ export default function ChatPanel({ noteId }: ChatPanelProps) {
           }}
         />
         <Button
-          onClick={handleSend}
+          onClick={() => handleSend()}
           disabled={loading || !input.trim()}
           size="sm"
+          className="self-end"
         >
-          {loading ? <Spinner /> : "发送"}
+          {loading ? <Spinner size="sm" /> : "发送"}
         </Button>
       </div>
     </div>

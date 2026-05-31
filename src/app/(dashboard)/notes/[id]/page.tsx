@@ -47,15 +47,18 @@ export default function NoteDetailPage() {
     loadNote();
   }, [loadNote]);
 
-  const handleSave = async (title: string, content: string, commitMessage: string, tags: string[]) => {
+  const handleSave = async (
+    title: string,
+    content: string,
+    commitMessage: string,
+    tags: string[]
+  ) => {
     setSaving(true);
-    // 更新标题和标签
     await fetch(`/api/notes/${noteId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, tags }),
     });
-    // 保存新版本
     await fetch(`/api/notes/${noteId}/versions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -95,7 +98,8 @@ export default function NoteDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("确定要删除这篇笔记吗？所有版本记录将被永久删除。")) return;
+    if (!confirm("确定要删除这篇笔记吗？所有版本记录将被永久删除。"))
+      return;
     const res = await fetch(`/api/notes/${noteId}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/notes");
@@ -105,7 +109,7 @@ export default function NoteDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center py-16">
-        <Spinner className="h-8 w-8" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -113,29 +117,45 @@ export default function NoteDetailPage() {
   if (!note) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-400">笔记不存在</p>
+        <div className="text-5xl mb-4">📭</div>
+        <p className="text-stone-500">笔记不存在</p>
+        <Button
+          variant="ghost"
+          className="mt-4"
+          onClick={() => router.push("/notes")}
+        >
+          ← 返回列表
+        </Button>
       </div>
     );
   }
 
   const tabs = [
-    { key: "edit" as const, label: "✏️ 编辑" },
-    { key: "versions" as const, label: "📋 版本历史" },
-    { key: "ai" as const, label: "🤖 AI 教练" },
+    { key: "edit" as const, label: "编辑", icon: "✏️" },
+    { key: "versions" as const, label: "版本历史", icon: "📋" },
+    { key: "ai" as const, label: "AI 教练", icon: "🤖" },
   ];
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-4xl mx-auto">
+      {/* 顶部导航栏 */}
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <button
           onClick={() => router.push("/notes")}
-          className="text-sm text-gray-500 hover:text-gray-700 shrink-0"
+          className="text-sm text-stone-400 hover:text-stone-600 transition-colors flex items-center gap-1 shrink-0"
         >
-          ← 返回列表
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          返回列表
         </button>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setPublishOpen(true)}>
-            {note.isPublic ? "已发布" : "发布到社区"}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPublishOpen(true)}
+          >
+            {note.isPublic ? "✅ 已发布" : "📤 发布到社区"}
           </Button>
           <Button variant="ghost" size="sm" onClick={handleDelete}>
             🗑️
@@ -143,22 +163,31 @@ export default function NoteDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-6 border-b overflow-x-auto">
+      {/* Tab 切换 — 带滑动指示条 */}
+      <div className="relative flex gap-0 mb-6 border-b border-stone-200 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${
-              tab === t.key
-                ? "border-emerald-500 text-emerald-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+            className={`relative px-5 py-3 text-sm font-medium transition-colors shrink-0
+              ${
+                tab === t.key
+                  ? "text-emerald-600"
+                  : "text-stone-400 hover:text-stone-600"
+              }`}
           >
-            {t.label}
+            <span className="flex items-center gap-1.5">
+              <span className="text-base">{t.icon}</span>
+              {t.label}
+            </span>
+            {tab === t.key && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-full" />
+            )}
           </button>
         ))}
       </div>
 
+      {/* Tab 内容 */}
       {tab === "edit" && (
         <Card className="p-6">
           <NoteEditor note={note} onSave={handleSave} saving={saving} />

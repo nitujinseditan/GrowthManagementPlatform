@@ -10,11 +10,10 @@ export default function CommunityPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");               // 输入框实时值
-  const [debouncedSearch, setDebouncedSearch] = useState(""); // 防抖后的值（用于 API 调用）
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 加载帖子（防抖搜索值或页码变化时重新加载）
   const fetchPosts = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -36,7 +35,6 @@ export default function CommunityPage() {
     fetchPosts();
   }, [fetchPosts]);
 
-  // 搜索输入防抖 300ms，搜索时重置到第一页
   const handleSearchChange = (value: string) => {
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -47,13 +45,19 @@ export default function CommunityPage() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">社区</h1>
+    <div className="max-w-5xl mx-auto">
+      {/* 顶部 */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-stone-900">社区</h1>
+        {total > 0 && (
+          <p className="text-sm text-stone-400 mt-1">{total} 篇帖子</p>
+        )}
+      </div>
 
       {/* 搜索栏 */}
-      <div className="relative mb-6">
+      <div className="relative mb-6 group">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-300 transition-colors group-focus-within:text-emerald-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -70,14 +74,18 @@ export default function CommunityPage() {
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="搜索帖子标题或摘要..."
-          className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-lg bg-white
-                     focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400
-                     placeholder:text-gray-400 transition-colors"
+          className="w-full pl-10 pr-10 py-2.5 text-sm border border-stone-200 rounded-xl bg-white
+                     focus:outline-none focus:border-emerald-400 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.12)]
+                     placeholder:text-stone-300 transition-all duration-200"
         />
         {search && (
           <button
-            onClick={() => { setSearch(""); setDebouncedSearch(""); setPage(1); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            onClick={() => {
+              setSearch("");
+              setDebouncedSearch("");
+              setPage(1);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-500 transition-colors"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -86,43 +94,59 @@ export default function CommunityPage() {
         )}
       </div>
 
+      {/* 内容区域 */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <Spinner className="h-8 w-8" />
+          <Spinner size="lg" />
         </div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-4">🌐</p>
-          <p className="text-lg">
-            {search ? "未找到匹配的帖子" : "还没有帖子"}
+        <div className="text-center py-20 text-stone-400">
+          <div className="text-5xl mb-4">
+            {debouncedSearch ? "🔍" : "🌐"}
+          </div>
+          <p className="text-lg font-medium text-stone-500 mb-2">
+            {debouncedSearch ? "未找到匹配的帖子" : "还没有帖子"}
           </p>
           <p className="text-sm">
-            {search ? "试试其他关键词吧" : "快去发布你的第一篇笔记吧！"}
+            {debouncedSearch
+              ? `未找到关于「${debouncedSearch}」的帖子，试试其他关键词吧`
+              : "快去发布你的第一篇笔记吧！"}
           </p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+            {posts.map((post, index) => (
+              <div
+                key={post.id}
+                className={`animate-fade-in-up stagger-${Math.min(index + 1, 8)}`}
+              >
+                <PostCard post={post} />
+              </div>
             ))}
           </div>
+
+          {/* 分页 */}
           {total > 20 && (
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center items-center gap-3 mt-8">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm border rounded-lg disabled:opacity-50"
+                className="px-4 py-2 text-sm rounded-lg border border-stone-200 bg-white
+                           text-stone-600 hover:border-emerald-300 hover:text-emerald-600
+                           disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 上一页
               </button>
-              <span className="px-4 py-2 text-sm text-gray-500">
-                第 {page} 页
+              <span className="text-sm text-stone-400">
+                第 {page} 页 / 共 {Math.ceil(total / 20)} 页
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={posts.length < 20}
-                className="px-4 py-2 text-sm border rounded-lg disabled:opacity-50"
+                className="px-4 py-2 text-sm rounded-lg border border-stone-200 bg-white
+                           text-stone-600 hover:border-emerald-300 hover:text-emerald-600
+                           disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 下一页
               </button>

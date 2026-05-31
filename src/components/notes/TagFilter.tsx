@@ -7,7 +7,6 @@ interface TagFilterProps {
 }
 
 export default function TagFilter({ tags, selected, onChange }: TagFilterProps) {
-  // 没有标签时不渲染
   if (tags.length === 0) return null;
 
   const toggleTag = (tagId: number) => {
@@ -19,15 +18,15 @@ export default function TagFilter({ tags, selected, onChange }: TagFilterProps) 
   };
 
   return (
-    <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-      {/* 全部标签：选中时清空筛选 */}
+    <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 scrollbar-none">
+      {/* 全部 */}
       <button
         onClick={() => onChange([])}
-        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+        className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
           ${
             selected.length === 0
-              ? "bg-emerald-500 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200/50"
+              : "bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
           }`}
       >
         全部
@@ -39,11 +38,11 @@ export default function TagFilter({ tags, selected, onChange }: TagFilterProps) 
           <button
             key={tag.id}
             onClick={() => toggleTag(tag.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+            className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200
               ${
                 isSelected
-                  ? "bg-emerald-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-emerald-500 text-white shadow-sm shadow-emerald-200/50"
+                  : "bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700"
               }`}
           >
             {tag.name}

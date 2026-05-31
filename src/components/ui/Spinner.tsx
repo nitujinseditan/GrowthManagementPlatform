@@ -1,10 +1,23 @@
-export default function Spinner({ className = "" }: { className?: string }) {
+interface SpinnerProps {
+  className?: string;
+  size?: "sm" | "md" | "lg";
+}
+
+export default function Spinner({ className = "", size = "md" }: SpinnerProps) {
+  const sizes = {
+    sm: "h-4 w-4",
+    md: "h-5 w-5",
+    lg: "h-8 w-8",
+  };
+
   return (
     <svg
-      className={`animate-spin h-5 w-5 text-emerald-500 ${className}`}
+      className={`animate-spin text-emerald-500 ${sizes[size]} ${className}`}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
+      role="status"
+      aria-label="加载中"
     >
       <circle
         className="opacity-25"

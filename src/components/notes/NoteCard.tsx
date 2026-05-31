@@ -8,23 +8,44 @@ export default function NoteCard({ note }: { note: Note }) {
 
   return (
     <Link href={`/notes/${note.id}`}>
-      <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer h-full">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-medium text-gray-900 truncate flex-1">
-            {note.title}
+      <Card hover className="p-5 h-full flex flex-col justify-between gap-3">
+        {/* 顶部：标题 + 公开标记 */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-semibold text-stone-900 leading-snug line-clamp-2">
+            {note.title || "无标题"}
           </h3>
-          {note.isPublic && <Badge variant="primary">公开</Badge>}
+          {note.isPublic && (
+            <span className="shrink-0 text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
+              公开
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {note.tags?.map((tag) => (
-            <Badge key={tag.id}>{tag.name}</Badge>
-          ))}
-        </div>
-        <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
-          <span>
-            {new Date(note.updatedAt).toLocaleDateString("zh-CN")}
-          </span>
-          {versionCount > 0 && <span>v{note.currentVersion?.versionNumber}</span>}
+
+        {/* 标签行 */}
+        {note.tags && note.tags.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {note.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag.id}>{tag.name}</Badge>
+            ))}
+            {note.tags.length > 3 && (
+              <span className="text-xs text-stone-400">+{note.tags.length - 3}</span>
+            )}
+          </div>
+        )}
+
+        {/* 底部信息 */}
+        <div className="flex items-center justify-between text-xs text-stone-400 pt-1 border-t border-stone-50">
+          <span>{new Date(note.updatedAt).toLocaleDateString("zh-CN", {
+            month: "short",
+            day: "numeric",
+          })}</span>
+          <div className="flex items-center gap-2">
+            {versionCount > 0 && (
+              <span className="text-emerald-500 font-medium">
+                v{note.currentVersion?.versionNumber}
+              </span>
+            )}
+          </div>
         </div>
       </Card>
     </Link>
