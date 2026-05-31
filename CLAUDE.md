@@ -120,8 +120,15 @@ git push origin main
 - 验证笔记出现在列表中，点击进入详情页，能看到版本历史。
 
 ### 7. 测试数据清理（必须执行）
+
+> ⚠️ **清理前必须先备份数据库**：
+> ```bash
+> cp data/growth-second-brain.db data/growth-second-brain.db.bak
+> ```
+
 自检过程中产生的所有测试数据（测试用户、测试笔记、测试标签等）**必须在交付前从数据库中清除**，不得留痕。清理步骤：
 
+- **禁止 `rm -f` 删除整个数据库文件**，必须使用 SQL `DELETE` 精确删除
 - 自检用的测试用户（如 `test@example.com`）及其创建的笔记、版本、标签关联 → 全部删除
 - 自检产生的孤立标签 → 删除（`DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM note_tags)`）
 - 清理后再次确认 `users` 表中只保留真实用户
