@@ -157,7 +157,7 @@ whatisthat/
 | Skill | 状态 | 位置 |
 |-------|------|------|
 | frontend-design | ✅ 已安装 | `~/.claude/skills/frontend-design/SKILL.md` |
-| interaction-design | ❌ 未找到 | petekp/claude-code-setup 不含此 SKILL.md |
+| interaction-design | ✅ 已安装 | `~/.claude/skills/interaction-design/`（来源: Owl-Listener/designer-skills，15 skills + 3 commands） |
 | planning-with-files | ⚠️ 非标准 skill | 手动使用 `.claude/plan.md` 管理上下文 |
 
 ---

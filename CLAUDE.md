@@ -142,7 +142,9 @@ git push origin main
 ## 设计协作
 
 - **frontend-design**：✅ 已安装（`~/.claude/skills/frontend-design/SKILL.md`），暂未启用，后续需要时通过 `/frontend-design` 激活。
-- **interaction-design**：❌ 未安装。已搜索 `petekp/claude-code-setup` 仓库，该仓库存在但不包含 `interaction-design` 的 `SKILL.md` 文件，skills-installer 报告 "No skills found"。如需此技能，后续手动查找替代来源。
+- **interaction-design**：✅ 已安装（`~/.claude/skills/interaction-design/`），来源 [Owl-Listener/designer-skills](https://github.com/Owl-Listener/designer-skills)，含 15 个 skills + 3 个 commands：
+  - Skills: micro-interaction-spec, animation-principles, state-machine, gesture-patterns, error-handling-ux, loading-states, feedback-patterns, hicks-law, millers-law, fitts-law, doherty-threshold, form-design, onboarding-design, navigation-patterns, search-ux
+  - Commands: `/design-interaction`, `/map-states`, `/error-flow`
 
 ---
 
