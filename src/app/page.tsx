@@ -23,7 +23,7 @@ export default async function Home() {
         <div className="flex gap-4 justify-center">
           <Link
             href="/login"
-            className="bg-blue-600 text-white rounded-lg px-6 py-2.5 font-medium hover:bg-blue-700 transition-colors"
+            className="bg-emerald-500 text-white rounded-lg px-6 py-2.5 font-medium hover:bg-emerald-600 transition-colors"
           >
             登录
           </Link>

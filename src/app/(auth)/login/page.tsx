@@ -61,7 +61,7 @@ export default function LoginPage() {
       </form>
       <p className="text-center text-sm text-gray-400 mt-4">
         还没有账号？{" "}
-        <Link href="/register" className="text-blue-600 hover:underline">
+        <Link href="/register" className="text-emerald-600 hover:underline">
           注册
         </Link>
       </p>

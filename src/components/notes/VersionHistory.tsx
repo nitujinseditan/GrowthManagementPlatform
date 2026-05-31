@@ -76,7 +76,7 @@ export default function VersionHistory({
           <div
             key={v.id}
             className={`border rounded-lg p-3 flex items-center justify-between ${
-              selectedIds.includes(v.id) ? "border-blue-400 bg-blue-50" : "border-gray-200"
+              selectedIds.includes(v.id) ? "border-emerald-400 bg-emerald-50" : "border-gray-200"
             }`}
           >
             <div className="flex items-center gap-3 flex-1">

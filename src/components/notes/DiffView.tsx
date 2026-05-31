@@ -50,7 +50,7 @@ export default function DiffView({
         </p>
         <button
           onClick={onClose}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-emerald-600 hover:text-emerald-800"
         >
           关闭对比
         </button>

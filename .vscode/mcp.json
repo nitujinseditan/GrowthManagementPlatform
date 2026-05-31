@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "no-slop": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "no-slop-mcp"]
+    }
+  }
+}

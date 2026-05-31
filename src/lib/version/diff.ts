@@ -1,11 +1,14 @@
-import { diffLines } from "diff";
 import type { DiffLine, VersionDiff } from "@/types";
 import { initDb } from "@/lib/db/init";
 import { noteVersions, notes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
-// 计算两个文本的行级差异
-export function computeDiff(textA: string, textB: string): DiffLine[] {
+// 计算两个文本的行级差异（动态导入 CommonJS 的 diff 库）
+export async function computeDiff(
+  textA: string,
+  textB: string
+): Promise<DiffLine[]> {
+  const { diffLines } = await import("diff");
   const changes = diffLines(textA, textB);
   return changes.map((change) => ({
     type: change.added
@@ -52,7 +55,7 @@ export async function compareVersions(
 
   if (!versionA || !versionB) return null;
 
-  const diff = computeDiff(versionA.content, versionB.content);
+  const diff = await computeDiff(versionA.content, versionB.content);
 
   return { versionA, versionB, diff };
 }

@@ -26,7 +26,7 @@ export default function Sidebar({ userName }: { userName?: string }) {
             href={link.href}
             className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
               link.active
-                ? "bg-blue-50 text-blue-700 font-medium"
+                ? "bg-emerald-50 text-emerald-700 font-medium"
                 : "text-gray-600 hover:bg-gray-50"
             }`}
           >

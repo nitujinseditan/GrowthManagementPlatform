@@ -82,7 +82,7 @@ export default function CommentSection({ postId }: { postId: number }) {
         </div>
       ) : (
         <p className="text-sm text-gray-400">
-          请<a href="/login" className="text-blue-600">登录</a>后发表评论
+          请<a href="/login" className="text-emerald-600 hover:underline">登录</a>后发表评论
         </p>
       )}
     </div>
