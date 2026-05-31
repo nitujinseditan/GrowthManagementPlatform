@@ -76,6 +76,19 @@ const CREATE_TABLES = `
     content TEXT NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+  CREATE TABLE IF NOT EXISTS email_verifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    token TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL
+  );
+`;
+
+// 迁移：为已有 users 表新增 email_verified 列（忽略"已存在"错误）
+// 已有用户自动标记为已验证（NULL → 当前时间戳）
+const MIGRATIONS = `
+  ALTER TABLE users ADD COLUMN email_verified INTEGER;
+  UPDATE users SET email_verified = unixepoch() WHERE email_verified IS NULL;
 `;
 
 async function initDatabase(): Promise<void> {
@@ -96,6 +109,13 @@ async function initDatabase(): Promise<void> {
 
   _sqlDb.run("PRAGMA foreign_keys = ON");
   _sqlDb.exec(CREATE_TABLES);
+
+  // 执行迁移（忽略"列已存在"错误）
+  try {
+    _sqlDb.exec(MIGRATIONS);
+  } catch {
+    // ALTER TABLE ADD COLUMN 在列已存在时抛错，可安全忽略
+  }
 
   _db = drizzle(_sqlDb, { schema });
 }

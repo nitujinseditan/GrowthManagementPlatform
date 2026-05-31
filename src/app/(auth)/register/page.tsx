@@ -1,25 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
     if (password !== confirmPassword) {
       setError("两次密码不一致");
@@ -34,21 +33,17 @@ export default function RegisterPage() {
       body: JSON.stringify({ name, email, password }),
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      const data = await res.json();
       setError(data.error || "注册失败");
       setLoading(false);
       return;
     }
 
-    // 注册后自动登录
-    await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    router.push("/notes");
+    // 注册成功，显示验证提示（不再自动登录）
+    setSuccess(data.message || "验证邮件已发送，请查收");
+    setLoading(false);
   };
 
   return (
@@ -87,8 +82,13 @@ export default function RegisterPage() {
           required
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "注册中..." : "注册"}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+            <p className="text-emerald-700 text-sm">✅ {success}</p>
+          </div>
+        )}
+        <Button type="submit" disabled={loading || !!success} className="w-full">
+          {loading ? "注册中..." : success ? "已发送验证邮件" : "注册"}
         </Button>
       </form>
       <p className="text-center text-sm text-gray-400 mt-4">

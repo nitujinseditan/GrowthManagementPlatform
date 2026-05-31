@@ -32,6 +32,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isValid = await verifyPassword(password, user.passwordHash);
         if (!isValid) return null;
 
+        // 检查邮箱是否已验证
+        if (!user.emailVerified) {
+          throw new Error("请先验证邮箱（检查你的收件箱或垃圾邮件）");
+        }
+
         return {
           id: String(user.id),
           email: user.email,

@@ -27,7 +27,11 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("邮箱或密码错误");
+      // 服务端抛出的具体错误信息（如"请先验证邮箱"），否则用默认提示
+      const msg = result.error === "CredentialsSignin"
+        ? "邮箱或密码错误"
+        : result.error;
+      setError(msg);
       setLoading(false);
     } else {
       router.push("/notes");
