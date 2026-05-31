@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/layout/Sidebar";
+import DashboardShell from "@/components/layout/DashboardShell";
 import AuthGuard from "@/components/layout/AuthGuard";
 
 export default async function DashboardLayout({
@@ -16,10 +16,9 @@ export default async function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="flex min-h-screen">
-        <Sidebar userName={session.user?.name || undefined} />
-        <main className="flex-1 p-6 overflow-y-auto">{children}</main>
-      </div>
+      <DashboardShell userName={session.user?.name || undefined}>
+        {children}
+      </DashboardShell>
     </AuthGuard>
   );
 }

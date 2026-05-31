@@ -126,10 +126,10 @@ export default function NoteDetailPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <button
           onClick={() => router.push("/notes")}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-gray-500 hover:text-gray-700 shrink-0"
         >
           ← 返回列表
         </button>
@@ -143,12 +143,12 @@ export default function NoteDetailPage() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-6 border-b">
+      <div className="flex gap-1 mb-6 border-b overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors shrink-0 ${
               tab === t.key
                 ? "border-emerald-500 text-emerald-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"

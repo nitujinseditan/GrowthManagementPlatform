@@ -50,7 +50,7 @@ export default function NotesPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 className="text-2xl font-bold">我的笔记</h1>
         <Link href="/notes/new">
           <Button>+ 新建笔记</Button>

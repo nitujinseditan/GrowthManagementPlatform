@@ -61,7 +61,7 @@ export default function NoteEditor({ note, onSave, saving }: NoteEditorProps) {
         onChange={(e) => setTagInput(e.target.value)}
         placeholder="用逗号分隔，如：考研, 英语, 复盘"
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <Input
           value={commitMessage}
           onChange={(e) => setCommitMessage(e.target.value)}

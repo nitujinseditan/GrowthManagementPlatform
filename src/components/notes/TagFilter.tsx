@@ -19,7 +19,7 @@ export default function TagFilter({ tags, selected, onChange }: TagFilterProps) 
   };
 
   return (
-    <div className="flex items-center gap-2 flex-wrap mb-6">
+    <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
       {/* 全部标签：选中时清空筛选 */}
       <button
         onClick={() => onChange([])}
