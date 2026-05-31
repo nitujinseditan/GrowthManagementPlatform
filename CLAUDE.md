@@ -136,3 +136,45 @@ git push origin main
 > ⚠️ 禁止以"终端编码问题，浏览器端不受影响"为由跳过实际验证。curl 测试中文标签时若出现编码问题，改用 ASCII 标签完成测试后清理。
 
 如果任何一步失败，**你必须自动修复代码并重新验证**，直到全部通过后才交付。可以在后台静默执行这些步骤，最终只需告诉用户"自检通过"以及测试结果摘要。
+
+---
+
+## 设计协作
+
+- **frontend-design**：✅ 已安装（`~/.claude/skills/frontend-design/SKILL.md`），暂未启用，后续需要时通过 `/frontend-design` 激活。
+- **interaction-design**：❌ 未安装。已搜索 `petekp/claude-code-setup` 仓库，该仓库存在但不包含 `interaction-design` 的 `SKILL.md` 文件，skills-installer 报告 "No skills found"。如需此技能，后续手动查找替代来源。
+
+---
+
+## 上下文管理
+
+### 规划文件方法（planning-with-files）
+
+`planning-with-files` 并非可通过 skills-installer 安装的标准技能，而是 Claude Code 的一种上下文管理最佳实践。其核心思路：
+
+1. **创建计划文件**：在项目根目录写入 `plan.md`，用 `<plan>` 标签描述当前任务、待办列表、关键决策。
+2. **更新进度**：每完成一步，更新 `plan.md` 中的对应条目（标记完成、追加备注）。
+3. **跨会话恢复**：新会话开始时，先读取 `plan.md` 恢复上下文，避免重复讨论。
+
+手动使用方式：
+- 开始复杂任务时 → 写入 `.claude/plan.md`，列出步骤
+- 每完成一步 → 编辑 `plan.md` 标记 `[x]`
+- 新会话 → 先 `Read .claude/plan.md` 恢复状态
+
+---
+
+## Slash Commands 参考（最佳实践）
+
+以下是从 Claude Code 社区最佳实践中提炼的常用命令模式，适合本项目工作流：
+
+| 命令 | 用途 | 本项目场景 |
+|------|------|-----------|
+| `/review` | 审查当前变更，检查 bug 和代码质量 | 提交前手动审查 PR 级别变更 |
+| `/fix` | 修复审查发现的问题 | 联动 /review 使用 |
+| `/commit` | 生成规范提交信息并提交 | 代替手动 git commit（遵守中文提交约定） |
+| `/test` | 运行 `pnpm dev` + curl 关键 API | 快速验证改动不破坏现有功能 |
+| `/clean` | 清理测试数据（精确 SQL DELETE） | 交付前执行，先 `cp` 备份数据库 |
+| `/plan` | 写入任务计划到 `.claude/plan.md` | 复杂多步骤任务开始前 |
+| `/status` | 输出当前分支、最近提交、数据库状态摘要 | 会话开始时快速定位 |
+
+> 以上命令为参考模板，具体实现需根据项目实际情况调整。核心原则：小步提交、每次修改后立即 push、测试数据不留痕。
