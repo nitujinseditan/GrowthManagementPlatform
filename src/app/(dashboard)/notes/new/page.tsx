@@ -12,13 +12,14 @@ export default function NewNotePage() {
   const handleSave = async (
     title: string,
     content: string,
-    commitMessage: string
+    commitMessage: string,
+    tags: string[]
   ) => {
     setSaving(true);
     const res = await fetch("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, commitMessage }),
+      body: JSON.stringify({ title, content, commitMessage, tags }),
     });
 
     if (res.ok) {

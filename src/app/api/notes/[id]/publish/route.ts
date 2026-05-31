@@ -26,7 +26,7 @@ export async function POST(
       );
     }
 
-    const post = publishNote(
+    const post = await publishNote(
       noteId,
       userId,
       parsed.data.title,

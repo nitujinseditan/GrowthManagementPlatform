@@ -47,13 +47,13 @@ export default function NoteDetailPage() {
     loadNote();
   }, [loadNote]);
 
-  const handleSave = async (title: string, content: string, commitMessage: string) => {
+  const handleSave = async (title: string, content: string, commitMessage: string, tags: string[]) => {
     setSaving(true);
-    // 先更新标题
+    // 更新标题和标签
     await fetch(`/api/notes/${noteId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ title, tags }),
     });
     // 保存新版本
     await fetch(`/api/notes/${noteId}/versions`, {

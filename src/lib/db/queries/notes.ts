@@ -171,4 +171,19 @@ export async function deleteNote(
   return true;
 }
 
+// 为笔记设置标签（先删后插）
+export async function setNoteTags(noteId: number, tagNames: string[]): Promise<void> {
+  const db = await getDb();
+  // 删除旧关联
+  db.delete(noteTags).where(eq(noteTags.noteId, noteId)).run();
+  // 创建新标签并关联
+  if (tagNames.length > 0) {
+    const tagRecords = await getOrCreateTags(tagNames);
+    for (const tag of tagRecords) {
+      db.insert(noteTags).values({ noteId, tagId: tag.id }).run();
+    }
+  }
+  saveToDisk();
+}
+
 export { _getVersionById };

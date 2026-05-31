@@ -12,7 +12,7 @@ export async function POST(
     const noteId = parseInt(params.id, 10);
     const versionId = parseInt(params.versionId, 10);
 
-    const newVersion = revertToVersion(noteId, userId, versionId);
+    const newVersion = await revertToVersion(noteId, userId, versionId);
 
     if (!newVersion) {
       return NextResponse.json(

@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
-import { getNoteById, updateNote, deleteNote } from "@/lib/db/queries/notes";
+import { getNoteById, updateNote, deleteNote, setNoteTags } from "@/lib/db/queries/notes";
 
 const updateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   isPublic: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
 });
 
 // GET /api/notes/[id] — 获取单条笔记
@@ -16,7 +17,7 @@ export async function GET(
   try {
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
-    const note = getNoteById(noteId, userId);
+    const note = await getNoteById(noteId, userId);
 
     if (!note) {
       return NextResponse.json({ error: "笔记不存在" }, { status: 404 });
@@ -49,13 +50,24 @@ export async function PATCH(
       );
     }
 
-    const note = updateNote(noteId, userId, parsed.data);
+    // 更新标签（如果提供）
+    if (parsed.data.tags !== undefined) {
+      await setNoteTags(noteId, parsed.data.tags);
+    }
+
+    // 更新标题等元数据（排除 tags 字段）
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { tags: _tags, ...meta } = parsed.data;
+    const note = await updateNote(noteId, userId, meta);
     if (!note) {
       return NextResponse.json({ error: "笔记不存在" }, { status: 404 });
     }
 
-    return NextResponse.json({ note });
+    // 重新加载以包含最新标签
+    const updated = await getNoteById(noteId, userId);
+    return NextResponse.json({ note: updated });
   } catch (error: unknown) {
+    console.error("PATCH /api/notes/[id] 错误:", error);
     if (error instanceof Error && error.message === "请先登录") {
       return NextResponse.json({ error: "请先登录" }, { status: 401 });
     }
@@ -71,7 +83,7 @@ export async function DELETE(
   try {
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
-    const deleted = deleteNote(noteId, userId);
+    const deleted = await deleteNote(noteId, userId);
 
     if (!deleted) {
       return NextResponse.json({ error: "笔记不存在" }, { status: 404 });

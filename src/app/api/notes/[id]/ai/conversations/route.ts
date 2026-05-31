@@ -14,7 +14,7 @@ export async function GET(
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
 
-    const conversations = getConversations(noteId, userId);
+    const conversations = await getConversations(noteId, userId);
     return NextResponse.json({ conversations });
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "请先登录") {
@@ -33,7 +33,7 @@ export async function POST(
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
 
-    const conversation = createConversation(noteId, userId);
+    const conversation = await createConversation(noteId, userId);
     return NextResponse.json({ conversation }, { status: 201 });
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "请先登录") {

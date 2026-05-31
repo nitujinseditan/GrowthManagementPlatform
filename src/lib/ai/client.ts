@@ -1,7 +1,9 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "sk-your-api-key",
+// DeepSeek API 兼容 OpenAI SDK，只需切换 baseURL
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY || "sk-your-api-key",
+  baseURL: "https://api.deepseek.com",
 });
 
 const SYSTEM_PROMPT = `你是一位专业的"AI 成长教练"，帮助用户进行知识复盘和深度思考。
@@ -17,13 +19,17 @@ const SYSTEM_PROMPT = `你是一位专业的"AI 成长教练"，帮助用户进�
 - 语气温暖但专业，像一位导师而非机器人
 - 如果用户询问与笔记无关的问题，温和地将话题引导回笔记内容`;
 
-// 发送聊天消息
+// DeepSeek 模型：日常用 flash（快速便宜），深度报告用 pro（更强推理）
+type DeepSeekModel = "deepseek-v4-flash" | "deepseek-v4-pro";
+
+// 发送聊天消息（日常对话用 flash）
 export async function sendChatMessage(
-  messages: { role: "user" | "assistant" | "system"; content: string }[]
+  messages: { role: "user" | "assistant" | "system"; content: string }[],
+  model: DeepSeekModel = "deepseek-v4-flash"
 ): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+    const response = await deepseek.chat.completions.create({
+      model,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...messages,
@@ -36,7 +42,7 @@ export async function sendChatMessage(
       response.choices[0]?.message?.content || "抱歉，我暂时无法回复。"
     );
   } catch (error) {
-    console.error("AI API 调用失败:", error);
+    console.error("DeepSeek API 调用失败:", error);
     return "AI 服务暂时不可用，请稍后再试。";
   }
 }

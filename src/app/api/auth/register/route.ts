@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { db } from "@/lib/db/init";
+import { initDb, saveToDisk } from "@/lib/db/init";
 import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/auth/utils";
 import { eq } from "drizzle-orm";
@@ -24,6 +24,9 @@ export async function POST(req: Request) {
     }
 
     const { email, name, password } = parsed.data;
+
+    // 初始化数据库
+    const db = await initDb();
 
     // 检查邮箱是否已注册
     const existing = db
@@ -50,6 +53,9 @@ export async function POST(req: Request) {
         name: users.name,
       })
       .get();
+
+    // 持久化到磁盘
+    saveToDisk();
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {

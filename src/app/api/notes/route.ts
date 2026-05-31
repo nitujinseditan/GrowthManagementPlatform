@@ -14,7 +14,7 @@ const createNoteSchema = z.object({
 export async function GET() {
   try {
     const userId = await requireAuth();
-    const notes = getNotesByUser(userId);
+    const notes = await getNotesByUser(userId);
     return NextResponse.json({ notes });
   } catch (error: unknown) {
     if (error instanceof Error && error.message === "请先登录") {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     }
 
     const { title, content, tags, commitMessage } = parsed.data;
-    const note = createNote(userId, title, content, tags, commitMessage);
+    const note = await createNote(userId, title, content, tags, commitMessage);
 
     return NextResponse.json({ note }, { status: 201 });
   } catch (error: unknown) {

@@ -22,7 +22,7 @@ export default function NoteCard({ note }: { note: Note }) {
         </div>
         <div className="flex items-center justify-between mt-3 text-xs text-gray-400">
           <span>
-            {note.updatedAt.toLocaleDateString("zh-CN")}
+            {new Date(note.updatedAt).toLocaleDateString("zh-CN")}
           </span>
           {versionCount > 0 && <span>v{note.currentVersion?.versionNumber}</span>}
         </div>

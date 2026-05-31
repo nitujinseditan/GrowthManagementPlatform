@@ -12,7 +12,7 @@ export async function GET(
     const noteId = parseInt(params.id, 10);
     const versionId = parseInt(params.versionId, 10);
 
-    const version = getVersion(versionId, noteId, userId);
+    const version = await getVersion(versionId, noteId, userId);
 
     if (!version) {
       return NextResponse.json({ error: "版本不存在" }, { status: 404 });

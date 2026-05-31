@@ -8,7 +8,7 @@
 - **UI**: React 18 + Tailwind CSS
 - **认证**: NextAuth.js v5 (Credentials Provider, JWT 策略)
 - **数据库**: SQLite (sql.js WASM 版) + Drizzle ORM — 零配置单文件，无需 Docker
-- **AI**: OpenAI API 直调 (GPT-4o-mini)，不做 RAG
+- **AI**: DeepSeek API 直调 (deepseek-v4-flash 日常 / deepseek-v4-pro 深度报告)，不做 RAG
 - **版本对比**: diff 库
 
 ## 项目结构
@@ -32,7 +32,7 @@ whatisthat/
 │   └── lib/
 │       ├── db/                       # 数据库 schema + 查询函数
 │       ├── auth/                     # NextAuth 配置
-│       ├── ai/                       # OpenAI client + 对话编排
+│       ├── ai/                       # DeepSeek client + 对话编排
 │       └── version/                  # diff 计算
 ├── data/                             # SQLite 数据库文件 (不提交 git)
 ├── package.json
@@ -56,35 +56,76 @@ users, notes, note_versions, tags, note_tags, posts, comments, ai_conversations,
 - 代码注释使用中文（复杂逻辑处）
 - 提交消息使用中文
 
+## 功能边界（MVP 阶段）
+
+当前阶段为完全免费的 MVP，**不实现任何付费/变现功能**。以下内容明确排除：
+
+- ❌ 会员订阅 / 付费墙
+- ❌ 微信支付、Stripe 或其他支付接口
+- ❌ 模板商城购买 / 付费模板
+- ❌ 创作者分成 / 提现
+- ❌ AI 调用次数限制 / 高级功能解锁
+
+所有功能对所有用户完全免费开放，无任何支付门槛。数据库 schema、API 路由、前端组件均不得引入付费相关字段或逻辑（如 `is_member`、`subscription_tier`、`ai_quota` 等）。
+
+> 远期商业画布（README.md）中的收入来源仅为未来设想，MVP 完成后由用户决定是否引入。
+
 ## 启动命令
 ```bash
-pnpm dev          # 启动开发服务器 → localhost:3000
+pnpm dev          # 启动开发服务器 → localhost:3722
 pnpm build        # 生产构建
 ```
 
 ---
 
-## AI 协作开发原则
+## Git 提交规则（必须遵守）
 
-以下原则适用于本项目的所有对话，Claude Code 应默认遵循：
+**每次代码修改完成后，必须立即提交到 GitHub。** 无论是修改一个文件还是多个文件，无论是修 bug 还是加功能，修改完成并验证通过后，必须执行：
 
-1. **目标驱动，而非实现细节**  
-   用户会告诉你"要做什么"，而不是"怎么写代码"。你需要主动补全实现方案，并选择最适合新手、最简单的技术栈。不要反问"你想用什么技术栈"，而是直接给出推荐并解释理由。
+```bash
+git add -A
+git commit -m "<中文提交信息，描述本次改动>"
+git push origin main
+```
 
-2. **小步快跑，分步交付**  
-   不要一次性输出整个大型项目。每次只完成一个可独立验证的功能模块，并给出验证方法（例如访问某个 URL、运行某个命令）。用户验证通过后再继续下一步。
+不允许累积多次修改后一次性提交。每次独立修改 = 一次独立提交 + 一次独立推送。
 
-3. **提供完整可执行的命令**  
-   给出的所有命令（创建文件夹、安装依赖、构建镜像、运行容器等）必须完整、可直接复制粘贴到 Windows PowerShell 或 CMD 中执行。不要只给代码片段。
+---
 
-4. **主动要求上下文**  
-   如果用户没有明确说明环境（操作系统、已安装的软件、已占用的端口、已有的 Docker 容器），你应该主动询问或基于常见情况给出兼容性建议（例如避免使用 8080 等易冲突端口）。
+## 交付前强制自检规则（必须遵守）
 
-5. **错误处理闭环**  
-   用户执行命令后如果报错，用户会把错误信息发给你。你需要分析错误原因，给出修正后的命令或操作步骤。不要假设用户能自己解决。
+在每次修改代码并交付给用户之前，你必须执行以下自检步骤，**只有全部通过后才能输出"验证通过，可以交付"**：
 
-6. **技术栈选择由你负责**  
-   用户不熟悉技术栈，你应根据需求自动选择最简单、维护成本最低的方案（例如 SQLite 替代 PostgreSQL，纯 HTML+JS 替代 React）。选择后简要说明理由。
+### 1. 启动验证
+在项目根目录运行 `pnpm dev`，确保 Next.js 开发服务器能在 30 秒内成功启动，终端无红色报错（warning 可忽略）。
 
-7. **每次输出优先保证"能跑起来"**  
-   在满足需求的前提下，优先保证用户能立即看到运行结果（哪怕是命令行输出），然后再考虑扩展性、性能等。
+### 2. 健康检查
+使用 `curl http://localhost:3722` 或 `npx wait-on http://localhost:3722` 确认主页可访问，返回状态码 200。
+
+### 3. 关键 API 测试
+- **注册**：`curl -X POST http://localhost:3722/api/auth/register -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"123456","name":"Test"}'` 应返回 200 或 201。
+- **登录**：`curl -X POST http://localhost:3722/api/auth/callback/credentials -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"123456","redirect":false}'` 应返回 200 并包含 `user` 对象。
+- **获取笔记列表**：使用上述登录返回的 cookie 或 session token 调用 `/api/notes`，应返回 200 和数组（可能为空）。
+
+### 4. 数据库完整性
+使用 sql.js 确认所有必需表（users, notes, note_versions, tags, note_tags, posts, comments, ai_conversations, ai_messages）已创建。
+
+### 5. 无 lint 严重错误
+运行 `pnpm lint`，确保无 `error` 级别问题（warning 不阻塞）。
+
+### 6. 模拟用户核心操作（手动验证）
+- 打开浏览器访问 `http://localhost:3722`，点击注册，填写信息，提交。
+- 注册成功后自动登录，跳转到 `/notes` 页面。
+- 点击"新建笔记"，输入标题和内容，保存。
+- 验证笔记出现在列表中，点击进入详情页，能看到版本历史。
+
+### 7. 测试数据清理（必须执行）
+自检过程中产生的所有测试数据（测试用户、测试笔记、测试标签等）**必须在交付前从数据库中清除**，不得留痕。清理步骤：
+
+- 自检用的测试用户（如 `test@example.com`）及其创建的笔记、版本、标签关联 → 全部删除
+- 自检产生的孤立标签 → 删除（`DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM note_tags)`）
+- 清理后再次确认 `users` 表中只保留真实用户
+
+> ⚠️ 禁止以"终端编码问题，浏览器端不受影响"为由跳过实际验证。curl 测试中文标签时若出现编码问题，改用 ASCII 标签完成测试后清理。
+
+如果任何一步失败，**你必须自动修复代码并重新验证**，直到全部通过后才交付。可以在后台静默执行这些步骤，最终只需告诉用户"自检通过"以及测试结果摘要。

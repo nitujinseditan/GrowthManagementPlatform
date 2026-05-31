@@ -24,7 +24,7 @@ export async function GET(
     const versionIdA = parseInt(a, 10);
     const versionIdB = parseInt(b, 10);
 
-    const result = compareVersions(versionIdA, versionIdB, noteId, userId);
+    const result = await compareVersions(versionIdA, versionIdB, noteId, userId);
 
     if (!result) {
       return NextResponse.json(

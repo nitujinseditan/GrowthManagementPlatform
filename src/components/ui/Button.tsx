@@ -12,7 +12,7 @@ export default function Button({
   children,
   ...props
 }: ButtonProps) {
-  const base = "inline-flex items-center justify-center rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap";
   const sizes = size === "sm" ? "px-3 py-1.5 text-sm" : "px-4 py-2 text-sm";
   const variants = {
     primary: "bg-emerald-500 text-white hover:bg-emerald-600",

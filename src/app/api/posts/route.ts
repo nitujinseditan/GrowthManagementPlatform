@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(req.nextUrl.searchParams.get("page") || "1", 10);
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || "20", 10);
 
-    const result = getPublicPosts(page, limit);
+    const result = await getPublicPosts(page, limit);
 
     return NextResponse.json(result);
   } catch (error) {

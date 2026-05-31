@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const postId = parseInt(params.id, 10);
-    const post = getPostById(postId);
+    const post = await getPostById(postId);
 
     if (!post) {
       return NextResponse.json({ error: "帖子不存在" }, { status: 404 });
@@ -29,7 +29,7 @@ export async function DELETE(
   try {
     const userId = await requireAuth();
     const postId = parseInt(params.id, 10);
-    const deleted = unpublishPost(postId, userId);
+    const deleted = await unpublishPost(postId, userId);
 
     if (!deleted) {
       return NextResponse.json(

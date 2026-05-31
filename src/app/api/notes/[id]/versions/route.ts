@@ -16,7 +16,7 @@ export async function GET(
   try {
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
-    const versions = getVersions(noteId, userId);
+    const versions = await getVersions(noteId, userId);
 
     return NextResponse.json({ versions });
   } catch (error: unknown) {
@@ -45,7 +45,7 @@ export async function POST(
       );
     }
 
-    const version = saveVersion(
+    const version = await saveVersion(
       noteId,
       userId,
       parsed.data.content,
