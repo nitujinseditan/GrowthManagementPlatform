@@ -1,26 +1,50 @@
 import { initDb, saveToDisk } from "../init";
-import { posts, users, notes, comments, noteVersions } from "../schema";
-import { eq, desc, count, and } from "drizzle-orm";
+import { posts, users, notes, comments, noteVersions, noteTags } from "../schema";
+import { eq, desc, count, and, inArray } from "drizzle-orm";
 import type { Post } from "@/types";
 
 async function getDb() {
   return initDb();
 }
 
-// 获取公开帖子列表
+// 获取公开帖子列表（支持标签筛选）
 export async function getPublicPosts(
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  tagIds?: number[]
 ): Promise<{ posts: Post[]; total: number }> {
   const db = await getDb();
   const offset = (page - 1) * limit;
 
-  const totalResult = db
-    .select({ count: count() })
-    .from(posts)
-    .get();
+  // 标签筛选：找出带有任一指定标签的 noteId
+  let taggedNoteIds: number[] | undefined;
+  if (tagIds && tagIds.length > 0) {
+    const rows = db
+      .select({ noteId: noteTags.noteId })
+      .from(noteTags)
+      .where(inArray(noteTags.tagId, tagIds))
+      .all();
+    taggedNoteIds = [...new Set(rows.map((r) => r.noteId))];
 
-  const rows = db
+    // 没有匹配的笔记 → 直接返回空
+    if (taggedNoteIds.length === 0) {
+      return { posts: [], total: 0 };
+    }
+  }
+
+  // 构建查询条件
+  const whereCondition =
+    taggedNoteIds ? inArray(posts.noteId, taggedNoteIds) : undefined;
+
+  // 总数查询
+  let totalQuery = db.select({ count: count() }).from(posts);
+  if (whereCondition) {
+    totalQuery = totalQuery.where(whereCondition);
+  }
+  const totalResult = totalQuery.get();
+
+  // 帖子列表查询
+  let postsQuery = db
     .select({
       id: posts.id,
       userId: posts.userId,
@@ -31,7 +55,13 @@ export async function getPublicPosts(
       authorName: users.name,
     })
     .from(posts)
-    .innerJoin(users, eq(posts.userId, users.id))
+    .innerJoin(users, eq(posts.userId, users.id));
+
+  if (whereCondition) {
+    postsQuery = postsQuery.where(whereCondition);
+  }
+
+  const rows = postsQuery
     .orderBy(desc(posts.createdAt))
     .limit(limit)
     .offset(offset)
