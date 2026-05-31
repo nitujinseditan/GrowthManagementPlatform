@@ -2,19 +2,40 @@
   "name": "growth-second-brain",
   "version": "0.0.1",
   "private": true,
-  "description": "成长第二大脑 — 个人知识资产与成长交流平台",
   "scripts": {
-    "dev:web": "pnpm --filter @gsb/web dev",
-    "dev:api": "pnpm --filter @gsb/api start:dev",
-    "dev": "pnpm run --parallel dev:web dev:api",
-    "build:web": "pnpm --filter @gsb/web build",
-    "build:api": "pnpm --filter @gsb/api build",
-    "build": "pnpm run build:web && pnpm run build:api",
-    "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
   },
-  "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
+  "dependencies": {
+    "@auth/core": "0.37.0",
+    "bcryptjs": "^2.4.3",
+    "diff": "^7.0.0",
+    "drizzle-orm": "^0.33.0",
+    "next": "14.2.35",
+    "next-auth": "5.0.0-beta.25",
+    "openai": "^4.70.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "sql.js": "^1.10.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/diff": "^6.0.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/sql.js": "^1.4.11",
+    "drizzle-kit": "^0.24.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
