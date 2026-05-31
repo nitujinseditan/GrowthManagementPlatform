@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicPosts } from "@/lib/db/queries/posts";
 
-// GET /api/posts — 公开接口，获取帖子列表（支持标签筛选）
+// GET /api/posts — 公开接口，获取帖子列表（支持搜索 + 标签筛选）
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -17,7 +17,10 @@ export async function GET(req: NextRequest) {
           .filter((n) => !isNaN(n))
       : undefined;
 
-    const result = await getPublicPosts(page, limit, tagIds);
+    // 关键词搜索：LIKE 匹配标题和摘要
+    const search = searchParams.get("search") || undefined;
+
+    const result = await getPublicPosts(page, limit, tagIds, search);
 
     return NextResponse.json(result);
   } catch (error) {

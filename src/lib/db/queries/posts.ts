@@ -1,17 +1,18 @@
 import { initDb, saveToDisk } from "../init";
 import { posts, users, notes, comments, noteVersions, noteTags } from "../schema";
-import { eq, desc, count, and, inArray } from "drizzle-orm";
+import { eq, desc, count, and, or, inArray, like } from "drizzle-orm";
 import type { Post } from "@/types";
 
 async function getDb() {
   return initDb();
 }
 
-// 获取公开帖子列表（支持标签筛选）
+// 获取公开帖子列表（支持搜索 + 标签筛选）
 export async function getPublicPosts(
   page: number = 1,
   limit: number = 20,
-  tagIds?: number[]
+  tagIds?: number[],
+  search?: string
 ): Promise<{ posts: Post[]; total: number }> {
   const db = await getDb();
   const offset = (page - 1) * limit;
@@ -32,9 +33,16 @@ export async function getPublicPosts(
     }
   }
 
-  // 构建查询条件
-  const whereCondition =
-    taggedNoteIds ? inArray(posts.noteId, taggedNoteIds) : undefined;
+  // 构建查询条件（标签 + 搜索可同时使用，AND 关系）
+  const conditions = [];
+  if (taggedNoteIds) {
+    conditions.push(inArray(posts.noteId, taggedNoteIds));
+  }
+  if (search && search.trim()) {
+    const keyword = `%${search.trim()}%`;
+    conditions.push(or(like(posts.title, keyword), like(posts.excerpt, keyword)));
+  }
+  const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
   // 总数查询
   let totalQuery = db.select({ count: count() }).from(posts);
