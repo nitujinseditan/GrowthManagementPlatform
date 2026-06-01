@@ -13,6 +13,7 @@ import {
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
 import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
+import TableOfContents from "@/components/notes/TableOfContents";
 import type { Note } from "@/types";
 
 interface NoteEditorProps {
@@ -45,6 +46,7 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
   const zenModeRef = useRef(false);
   zenModeRef.current = zenMode;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   // 禅模式：切换 body class
   useEffect(() => {
@@ -316,13 +318,22 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
           <WritingStats content={content} />
         </div>
 
-        {/* 右栏：预览区 */}
-        <div
-          className={`${
-            showPreview ? "block" : "hidden lg:block"
-          } min-h-[420px] border border-stone-200 rounded-lg bg-white p-5 overflow-y-auto`}
-        >
-          <MarkdownPreview content={content} />
+        {/* 右栏：预览区 + TOC */}
+        <div className="flex gap-0">
+          <div
+            ref={previewContainerRef}
+            className={`${
+              showPreview ? "block" : "hidden lg:block"
+            } flex-1 min-w-0 min-h-[420px] border border-stone-200 rounded-lg bg-white p-5 overflow-y-auto`}
+          >
+            <MarkdownPreview content={content} />
+          </div>
+
+          {/* 目录导航 — xl 屏幕显示 */}
+          <TableOfContents
+            content={content}
+            previewContainerRef={previewContainerRef}
+          />
         </div>
       </div>
 
