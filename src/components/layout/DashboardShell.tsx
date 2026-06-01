@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
+import { ToastProvider } from "@/components/ui/Toast";
 
 interface DashboardShellProps {
   userName?: string;
@@ -47,9 +48,10 @@ export default function DashboardShell({
   ];
 
   return (
-    <div className="flex min-h-screen bg-stone-50">
-      {/* 桌面端侧边栏 */}
-      <div className="hidden md:block shrink-0">
+    <ToastProvider>
+      <div className="flex min-h-screen bg-stone-50">
+        {/* 桌面端侧边栏 */}
+        <div className="hidden md:block shrink-0">
         <Sidebar userName={userName} />
       </div>
 
@@ -116,6 +118,7 @@ export default function DashboardShell({
           </div>
         </nav>
       </main>
-    </div>
+      </div>
+    </ToastProvider>
   );
 }
