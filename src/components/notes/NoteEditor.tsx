@@ -12,6 +12,7 @@ import {
 } from "@/components/markdown";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
+import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
 import type { Note } from "@/types";
 
 interface NoteEditorProps {
@@ -55,6 +56,25 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
     : null;
 
   const relativeTime = useRelativeTime(autoSave?.lastSavedAt ?? null);
+
+  // 草稿恢复
+  const draftKey = note ? `note:${note.id}` : "note:new";
+  const lastSaved = note?.updatedAt ? new Date(note.updatedAt).getTime() : undefined;
+  const draft = useDraftRecovery({
+    draftKey,
+    data: { title, content, tags },
+    lastSavedTimestamp: lastSaved,
+  });
+
+  // 草稿恢复处理
+  const handleRecover = () => {
+    if (draft.draft) {
+      setTitle(draft.draft.title);
+      setContent(draft.draft.content);
+      setTags(draft.draft.tags);
+    }
+    draft.recover();
+  };
 
   // 加载已有笔记数据
   useEffect(() => {
@@ -103,6 +123,7 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
     );
     setCommitMessage("");
     setSaved(true);
+    clearDraft(draftKey); // 保存成功后清除草稿
     setTimeout(() => setSaved(false), 2000);
   };
 
@@ -160,6 +181,37 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
 
   return (
     <div className="space-y-4">
+      {/* 草稿恢复提示 */}
+      {draft.hasDraft && draft.draft && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl
+                        motion-safe:animate-[fadeInUp_0.3s_ease-out_both]">
+          <div className="flex items-center gap-2 text-sm text-amber-700 min-w-0">
+            <span className="text-base shrink-0">📝</span>
+            <span className="truncate">
+              检测到{draft.draftTime}的草稿，是否恢复？
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleRecover}
+              className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-500
+                         rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              恢复
+            </button>
+            <button
+              type="button"
+              onClick={draft.discard}
+              className="px-3 py-1.5 text-xs font-medium text-stone-500 bg-stone-100
+                         rounded-lg hover:bg-stone-200 transition-colors"
+            >
+              丢弃
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 标题 */}
       <Input
         value={title}
