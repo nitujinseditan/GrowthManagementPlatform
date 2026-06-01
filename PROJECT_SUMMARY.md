@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（设计系统升级：shadcn/ui 组件库 + HSL 设计令牌 + Radix 无障碍原语）
+> 最后更新：2026-06-01（自动保存→退出提醒 + 设计系统 shadcn/ui + HSL 令牌）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -138,10 +138,11 @@ whatisthat/
 - [x] **移动端响应式** 🆕 — 侧边栏→抽屉汉堡菜单、卡片单列、表单堆叠、TagFilter 横向滚动
 - [x] **数据安全** 🆕 — 测试数据清理必须先备份 + SQL DELETE 精确删除，禁止 rm -f 删库
 - [x] **UI 审美全面优化** 🆕 — 22 文件重构：stone 暖灰配色、emerald 柔光聚焦、卡片悬浮微交互、8 套 CSS 动画、即时表单校验、移动端底部 Tab 栏 + 抽屉侧边栏、时间轴版本历史、无障碍支持（prefers-reduced-motion/ARIA）→ [DESIGN_PLAN.md](DESIGN_PLAN.md) + [INTERACTION_PLAN.md](INTERACTION_PLAN.md) + [UI_OPTIMIZATION_SUMMARY.md](UI_OPTIMIZATION_SUMMARY.md)
+- [x] **退出提醒** 🆕 — 替换自动保存，三层导航守卫（beforeunload 关闭标签页 + click 捕获拦截侧边栏/移动端Tab + popstate 拦截后退）+ shadcn Dialog 确认框（保存并离开/不保存离开/取消），脏状态追踪
 - [x] **Markdown 编辑器** — 双栏实时预览、11→15 按钮工具栏、Ctrl+B/I/K 快捷键、写作统计
 - [x] **设计系统全面升级** 🆕 — shadcn/ui 组件库 + HSL 设计令牌 + Radix 无障碍原语 + semantic color tokens (primary/secondary/muted/accent/card)
 - [x] **编辑器专业化升级** 🆕 — 13 项新功能 + 6 个 Schema 新列：
-  - ⏱ **自动保存** — 停笔 2 秒自动创建版本（commitMessage="自动保存"），状态栏实时指示
+  - ⏱ **自动保存** — ~~停笔 2 秒自动创建版本~~（已移除）→ 改为退出提醒（三层导航守卫 + Dialog 确认框，beforeunload / click 捕获 / popstate）
   - 📝 **草稿恢复** — localStorage 防抖保存 + 恢复/丢弃提示 banner
   - 🧘 **禅模式** — F11 全屏写作，隐藏所有 UI 干扰，Escape 退出
   - 📑 **目录导航** — 解析标题生成层级 TOC，点击跳转，IntersectionObserver 高亮当前章节
