@@ -102,9 +102,10 @@ const MIGRATIONS_V2 = `
 `;
 
 // 迁移 V3：Phase 4-5 — content_html + projects 表 + notes.project_id
-const MIGRATIONS_V3 = `
-  ALTER TABLE note_versions ADD COLUMN content_html TEXT;
-  CREATE TABLE IF NOT EXISTS projects (
+// 每条语句单独执行，避免一条失败导致后续跳过
+const MIGRATIONS_V3: string[] = [
+  `ALTER TABLE note_versions ADD COLUMN content_html TEXT`,
+  `CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -112,9 +113,9 @@ const MIGRATIONS_V3 = `
     icon TEXT,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
-  );
-  ALTER TABLE notes ADD COLUMN project_id INTEGER;
-`;
+  )`,
+  `ALTER TABLE notes ADD COLUMN project_id INTEGER`,
+];
 
 async function initDatabase(): Promise<void> {
   if (_db && _sqlDb) return;
@@ -148,10 +149,12 @@ async function initDatabase(): Promise<void> {
     // V2 列已存在，安全忽略
   }
 
-  try {
-    _sqlDb.exec(MIGRATIONS_V3);
-  } catch {
-    // V3 列已存在，安全忽略
+  for (const sql of MIGRATIONS_V3) {
+    try {
+      _sqlDb.exec(sql);
+    } catch {
+      // 列已存在或表已存在，安全忽略
+    }
   }
 
   _db = drizzle(_sqlDb, { schema });

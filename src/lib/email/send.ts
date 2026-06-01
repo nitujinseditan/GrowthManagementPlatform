@@ -34,10 +34,11 @@ export async function sendVerificationEmail({
   const html = `
     <div style="max-width:480px;margin:0 auto;padding:24px;font-family:system-ui,-apple-system,sans-serif">
       <h2 style="color:#10b981;margin-bottom:16px">🧠 成长第二大脑</h2>
-      <p style="font-size:16px;color:#333">感谢你的注册！请点击下方按钮验证你的邮箱地址：</p>
-      <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#10b981;color:#fff;border-radius:8px;text-decoration:none;font-size:14px;margin:16px 0">验证邮箱</a>
-      <p style="font-size:12px;color:#999;margin-top:16px">或者复制以下链接到浏览器打开：</p>
-      <p style="font-size:12px;color:#999;word-break:break-all">${verifyUrl}</p>
+      <p style="font-size:16px;color:#333">感谢你的注册！请复制下方链接到浏览器地址栏打开以验证你的邮箱：</p>
+      <div style="margin:16px 0;padding:12px 16px;background:#f5f5f4;border-radius:8px;border:1px solid #e7e5e4">
+        <p style="font-size:13px;color:#1c1917;word-break:break-all;margin:0;font-family:monospace">${verifyUrl}</p>
+      </div>
+      <p style="font-size:14px;color:#333;margin-top:16px">📋 <strong>操作步骤：</strong>复制上面的链接 → 打开浏览器 → 粘贴到地址栏 → 回车</p>
       <p style="font-size:12px;color:#999;margin-top:24px">此链接 10 分钟内有效。如果你没有注册此账号，请忽略此邮件。</p>
     </div>
   `;
