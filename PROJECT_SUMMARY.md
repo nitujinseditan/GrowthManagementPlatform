@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01
+> 最后更新：2026-06-01（UI 全面优化 + Markdown 编辑器增强）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -26,6 +26,7 @@
 | AI | DeepSeek API（compatible OpenAI SDK）| deepseek-v4-flash 日常 / deepseek-v4-pro 深度 |
 | 邮件 | Nodemailer + Gmail SMTP | 注册邮箱验证码，开发环境可降级为控制台打印 |
 | 版本对比 | diff 库（动态 import）| CommonJS 注意 |
+| Markdown | react-markdown + remark-gfm + @tailwindcss/typography | 编辑器双栏预览 + 社区内容渲染 |
 | 包管理 | pnpm | |
 | 端口 | **3722**（固定） | `next dev -p 3722` |
 
@@ -47,7 +48,8 @@ whatisthat/
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
 │   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
-│   │   └── ai/           # ChatPanel
+│   │   ├── ai/           # ChatPanel
+│   │   └── markdown/     # MarkdownToolbar, MarkdownPreview, WritingStats
 │   └── lib/
 │       ├── db/           # schema.ts, init.ts (sql.js), queries/{notes,versions,tags,posts,comments}.ts
 │       ├── auth/         # NextAuth 配置, session.ts, utils.ts
@@ -133,16 +135,20 @@ whatisthat/
 - [x] 全局 emerald 配色方案（#10b981 主色调）
 - [x] **移动端响应式** 🆕 — 侧边栏→抽屉汉堡菜单、卡片单列、表单堆叠、TagFilter 横向滚动
 - [x] **数据安全** 🆕 — 测试数据清理必须先备份 + SQL DELETE 精确删除，禁止 rm -f 删库
+- [x] **UI 审美全面优化** 🆕 — 22 文件重构：stone 暖灰配色、emerald 柔光聚焦、卡片悬浮微交互、8 套 CSS 动画、即时表单校验、移动端底部 Tab 栏 + 抽屉侧边栏、时间轴版本历史、无障碍支持（prefers-reduced-motion/ARIA）→ [DESIGN_PLAN.md](DESIGN_PLAN.md) + [INTERACTION_PLAN.md](INTERACTION_PLAN.md) + [UI_OPTIMIZATION_SUMMARY.md](UI_OPTIMIZATION_SUMMARY.md)
+- [x] **Markdown 编辑器** 🆕 — 双栏实时预览（左编辑右预览）、11 按钮格式化工具栏（B/I/H/列表/代码/引用/链接/分隔线）、Ctrl+B/I/K 光标插入快捷键、实时写作统计（字符/中英混合字数/阅读时间）、react-markdown + GFM 表格/删除线/任务列表 → [MarkdownToolbar.tsx](src/components/markdown/MarkdownToolbar.tsx) + [MarkdownPreview.tsx](src/components/markdown/MarkdownPreview.tsx) + [WritingStats.tsx](src/components/markdown/WritingStats.tsx)
 
 ---
 
 ## 八、UI 设计规范（必须遵守）
 
-1. **极简浅色**：背景 #fff/#f3f4f6，主按钮 emerald #10b981
-2. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px
-3. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px
-4. **圆角**：8px（rounded-lg）
-5. **留白**：区块间 ≥24px
+1. **极简暖灰**：背景 #fafaf9（stone-50）/ #ffffff，主按钮 emerald #10b981，文字 stone 色系（非冷灰 gray）
+2. **柔光聚焦**：输入框 focus 使用 `shadow-[0_0_0_3px_rgba(16,185,129,0.12)]`（非 ring-2），卡片悬浮 `translateY(-4px) + shadow-lg`
+3. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px；编辑器使用 font-mono
+4. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px
+5. **圆角**：8px→16px（rounded-lg→rounded-2xl 卡片），按钮/输入框 8px
+6. **动画**：8 套 CSS @keyframes（fadeInUp, slideInRight, breatheGlow, shimmer, typingDot, inkSpread, successPop）+ stagger 延迟入场 + prefers-reduced-motion 支持
+7. **留白**：区块间 ≥24px
 
 ---
 
@@ -156,8 +162,8 @@ whatisthat/
 
 | Skill | 状态 | 位置 |
 |-------|------|------|
-| frontend-design | ✅ 已安装 | `~/.claude/skills/frontend-design/SKILL.md` |
-| interaction-design | ✅ 已安装 | `~/.claude/skills/interaction-design/`（来源: Owl-Listener/designer-skills，15 skills + 3 commands） |
+| frontend-design | ✅ 已安装+已使用 | `~/.claude/skills/frontend-design/SKILL.md` — 已用于 UI 全面优化（参见 DESIGN_PLAN.md） |
+| interaction-design | ✅ 已安装+已使用 | `~/.claude/skills/interaction-design/`（来源: Owl-Listener/designer-skills，15 skills + 3 commands）— 已用于交互流程优化（参见 INTERACTION_PLAN.md） |
 | planning-with-files | ⚠️ 非标准 skill | 手动使用 `.claude/plan.md` 管理上下文 |
 
 ---

@@ -5,7 +5,8 @@
 
 ## 技术栈（简化版，小范围测试用）
 - **框架**: Next.js 14 (App Router) — 前后端一体，API Routes 替代独立后端
-- **UI**: React 18 + Tailwind CSS
+- **UI**: React 18 + Tailwind CSS + @tailwindcss/typography
+- **Markdown**: react-markdown + remark-gfm（编辑器双栏预览 + 社区内容渲染）
 - **认证**: NextAuth.js v5 (Credentials Provider, JWT 策略)
 - **数据库**: SQLite (sql.js WASM 版) + Drizzle ORM — 零配置单文件，无需 Docker
 - **AI**: DeepSeek API 直调 (deepseek-v4-flash 日常 / deepseek-v4-pro 深度报告)，不做 RAG
@@ -19,7 +20,7 @@ whatisthat/
 │   │   ├── (auth)/login, register    # 认证页面
 │   │   ├── (dashboard)/notes/[id]    # 笔记 CRUD + 版本管理
 │   │   ├── (dashboard)/community     # 社区浏览
-│   │   ├── api/                      # ~17 个 API 端点
+│   │   ├── api/                      # ~18 个 API 端点
 │   │   ├── layout.tsx                # 根布局
 │   │   ├── page.tsx                  # 首页
 │   │   └── globals.css               # 全局样式
@@ -28,7 +29,8 @@ whatisthat/
 │   │   ├── layout/                   # 布局组件 (Sidebar, AuthGuard)
 │   │   ├── notes/                    # 笔记组件 (Editor, VersionHistory, DiffView)
 │   │   ├── community/                # 社区组件 (PostCard, CommentSection)
-│   │   └── ai/                       # AI 组件 (ChatPanel)
+│   │   ├── ai/                       # AI 组件 (ChatPanel)
+│   │   └── markdown/                 # Markdown 组件 (Toolbar, Preview, WritingStats)
 │   └── lib/
 │       ├── db/                       # 数据库 schema + 查询函数
 │       ├── auth/                     # NextAuth 配置
@@ -40,8 +42,8 @@ whatisthat/
 └── drizzle.config.ts
 ```
 
-## 数据库（9 张表）
-users, notes, note_versions, tags, note_tags, posts, comments, ai_conversations, ai_messages
+## 数据库（10 张表）
+users, notes, note_versions, tags, note_tags, posts, comments, ai_conversations, ai_messages, email_verifications
 
 ## Git 式版本控制
 - 每次保存 = 创建新 note_version 行（内容全量快照）
@@ -141,10 +143,19 @@ git push origin main
 
 ## 设计协作
 
-- **frontend-design**：✅ 已安装（`~/.claude/skills/frontend-design/SKILL.md`），暂未启用，后续需要时通过 `/frontend-design` 激活。
-- **interaction-design**：✅ 已安装（`~/.claude/skills/interaction-design/`），来源 [Owl-Listener/designer-skills](https://github.com/Owl-Listener/designer-skills)，含 15 个 skills + 3 个 commands：
+- **frontend-design**：✅ 已安装+已使用（`~/.claude/skills/frontend-design/SKILL.md`）— 已用于全局 UI 审美优化，设计方向为"温润书香"（stone 暖灰 + emerald 柔光），详见 [DESIGN_PLAN.md](DESIGN_PLAN.md)。
+- **interaction-design**：✅ 已安装+已使用（`~/.claude/skills/interaction-design/`），来源 [Owl-Listener/designer-skills](https://github.com/Owl-Listener/designer-skills)，含 15 个 skills + 3 个 commands：
   - Skills: micro-interaction-spec, animation-principles, state-machine, gesture-patterns, error-handling-ux, loading-states, feedback-patterns, hicks-law, millers-law, fitts-law, doherty-threshold, form-design, onboarding-design, navigation-patterns, search-ux
   - Commands: `/design-interaction`, `/map-states`, `/error-flow`
+  - 已用于五条核心交互流程分析 + 微交互规范设计，详见 [INTERACTION_PLAN.md](INTERACTION_PLAN.md)。
+
+### 设计交付物
+
+| 文件 | 内容 |
+|------|------|
+| [DESIGN_PLAN.md](DESIGN_PLAN.md) | 四问设计框架（Purpose/Tone/Constraints/Differentiation），"温润书香"美学方向，页面级设计指令 |
+| [INTERACTION_PLAN.md](INTERACTION_PLAN.md) | 五条核心流程分析（注册→登录、创建→保存→版本、发布→浏览、AI 对话、导航）、微交互规格、无障碍增强 |
+| [UI_OPTIMIZATION_SUMMARY.md](UI_OPTIMIZATION_SUMMARY.md) | 优化总结：22 文件修改、7 视觉改进、6 交互改进、CSS 动画目录 |
 
 ---
 
