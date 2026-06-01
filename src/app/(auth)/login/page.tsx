@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,15 +39,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100 p-8 animate-fade-in-up">
+    <Card className="p-8 animate-fade-in-up shadow-lg">
       {/* 品牌标志 */}
       <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 mb-4">
           <span className="text-2xl">🧠</span>
         </div>
-        <h1 className="text-xl font-bold text-stone-900">欢迎回来</h1>
+        <h1 className="text-xl font-bold text-foreground">欢迎回来</h1>
         <div className="w-10 h-0.5 bg-emerald-400 mx-auto mt-2 rounded-full" />
-        <p className="text-sm text-stone-400 mt-2">登录你的成长空间</p>
+        <p className="text-sm text-muted-foreground mt-2">登录你的成长空间</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,12 +98,12 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-stone-400 mt-6">
+      <p className="text-center text-sm text-muted-foreground mt-6">
         还没有账号？{" "}
         <Link href="/register" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
           注册
         </Link>
       </p>
-    </div>
+    </Card>
   );
 }

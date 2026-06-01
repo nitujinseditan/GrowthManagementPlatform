@@ -368,6 +368,103 @@ body {
   }
 }
 
+/* ===== Novel 编辑器样式 ===== */
+
+.novel-editor .ProseMirror {
+  min-height: 300px;
+  outline: none;
+}
+
+.novel-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.novel-editor .ProseMirror h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.novel-editor .ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.novel-editor .ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.novel-editor .ProseMirror ul,
+.novel-editor .ProseMirror ol {
+  padding-left: 1.5rem;
+}
+
+.novel-editor .ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.novel-editor .ProseMirror blockquote {
+  border-left: 3px solid hsl(var(--primary));
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.novel-editor .ProseMirror pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.novel-editor .ProseMirror pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+.novel-editor .ProseMirror code {
+  background: hsl(var(--muted));
+  color: hsl(var(--destructive));
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+.novel-editor .ProseMirror img {
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+}
+
+.novel-editor .ProseMirror hr {
+  border-color: hsl(var(--border));
+  margin: 1.5rem 0;
+}
+
+.novel-editor .ProseMirror a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.novel-editor .ProseMirror a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
 /* ===== 禅模式（全屏写作）===== */
 
 body.zen-mode .sidebar-desktop,

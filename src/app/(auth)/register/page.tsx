@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -83,7 +84,7 @@ export default function RegisterPage() {
   // 注册成功 — 全屏成功状态卡片
   if (success) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100 p-8 text-center animate-fade-in-up">
+      <Card className="shadow-lg p-8 text-center animate-fade-in-up">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 mb-4">
           <svg
             className="h-8 w-8 text-emerald-500 animate-success-pop"
@@ -99,13 +100,13 @@ export default function RegisterPage() {
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-stone-900 mb-2">
+        <h2 className="text-lg font-semibold text-foreground mb-2">
           验证邮件已发送 ✉️
         </h2>
         <p className="text-sm text-stone-500 mb-1">
           我们向 <span className="text-emerald-600 font-medium">{email}</span> 发送了一封验证邮件
         </p>
-        <p className="text-xs text-stone-400 mb-6">
+        <p className="text-xs text-muted-foreground mb-6">
           请查收邮件并点击验证链接（10分钟内有效）
         </p>
         <Link href="/login">
@@ -113,20 +114,20 @@ export default function RegisterPage() {
             去登录
           </Button>
         </Link>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg shadow-stone-200/50 border border-stone-100 p-8 animate-fade-in-up">
+    <Card className="shadow-lg p-8 animate-fade-in-up">
       {/* 品牌标志 */}
       <div className="text-center mb-6">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-50 mb-4">
           <span className="text-2xl">🌱</span>
         </div>
-        <h1 className="text-xl font-bold text-stone-900">创建账号</h1>
+        <h1 className="text-xl font-bold text-foreground">创建账号</h1>
         <div className="w-10 h-0.5 bg-emerald-400 mx-auto mt-2 rounded-full" />
-        <p className="text-sm text-stone-400 mt-2">开始你的成长之旅</p>
+        <p className="text-sm text-muted-foreground mt-2">开始你的成长之旅</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,12 +222,12 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-stone-400 mt-6">
+      <p className="text-center text-sm text-muted-foreground mt-6">
         已有账号？{" "}
         <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
           登录
         </Link>
       </p>
-    </div>
+    </Card>
   );
 }

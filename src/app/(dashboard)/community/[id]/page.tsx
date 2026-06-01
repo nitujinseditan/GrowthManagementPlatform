@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
+import Button from "@/components/ui/Button";
 import CommentSection from "@/components/community/CommentSection";
 import Spinner from "@/components/ui/Spinner";
 import { MarkdownPreview } from "@/components/markdown";
@@ -59,15 +60,17 @@ export default function PostDetailPage() {
   return (
     <div className="max-w-2xl mx-auto">
       {/* 返回 */}
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
         onClick={() => router.push("/community")}
-        className="text-sm text-stone-400 hover:text-stone-600 transition-colors flex items-center gap-1 mb-4"
+        className="mb-4"
       >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         返回社区
-      </button>
+      </Button>
 
       {/* 帖子内容 */}
       <Card className="p-6 mb-6">

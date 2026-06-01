@@ -44,7 +44,7 @@ export default function DiffView({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           对比 v{diffData.versionA.versionNumber} → v
           {diffData.versionB.versionNumber}
         </p>
@@ -56,7 +56,7 @@ export default function DiffView({
         </button>
       </div>
       <div className="border rounded-lg overflow-hidden">
-        <div className="flex text-xs text-gray-500 bg-gray-50 border-b">
+        <div className="flex text-xs text-muted-foreground bg-muted border-b">
           <div className="flex-1 p-2 border-r">版本 A (v{diffData.versionA.versionNumber})</div>
           <div className="flex-1 p-2">版本 B (v{diffData.versionB.versionNumber})</div>
         </div>

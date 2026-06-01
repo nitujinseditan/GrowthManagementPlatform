@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import PostCard from "@/components/community/PostCard";
 import Spinner from "@/components/ui/Spinner";
+import Button from "@/components/ui/Button";
 import type { Post } from "@/types";
 
 export default function CommunityPage() {
@@ -57,7 +58,7 @@ export default function CommunityPage() {
       {/* 搜索栏 */}
       <div className="relative mb-6 group">
         <svg
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-stone-300 transition-colors group-focus-within:text-emerald-400"
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-emerald-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -74,9 +75,9 @@ export default function CommunityPage() {
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="搜索帖子标题或摘要..."
-          className="w-full pl-10 pr-10 py-2.5 text-sm border border-stone-200 rounded-xl bg-white
+          className="w-full pl-10 pr-10 py-2.5 text-sm border border-input rounded-xl bg-background
                      focus:outline-none focus:border-emerald-400 focus:shadow-[0_0_0_3px_rgba(16,185,129,0.12)]
-                     placeholder:text-stone-300 transition-all duration-200"
+                     placeholder:text-muted-foreground transition-all duration-200"
         />
         {search && (
           <button
@@ -85,7 +86,7 @@ export default function CommunityPage() {
               setDebouncedSearch("");
               setPage(1);
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-300 hover:text-stone-500 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -129,27 +130,25 @@ export default function CommunityPage() {
           {/* 分页 */}
           {total > 20 && (
             <div className="flex justify-center items-center gap-3 mt-8">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm rounded-lg border border-stone-200 bg-white
-                           text-stone-600 hover:border-emerald-300 hover:text-emerald-600
-                           disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 上一页
-              </button>
-              <span className="text-sm text-stone-400">
+              </Button>
+              <span className="text-sm text-muted-foreground">
                 第 {page} 页 / 共 {Math.ceil(total / 20)} 页
               </span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={posts.length < 20}
-                className="px-4 py-2 text-sm rounded-lg border border-stone-200 bg-white
-                           text-stone-600 hover:border-emerald-300 hover:text-emerald-600
-                           disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 下一页
-              </button>
+              </Button>
             </div>
           )}
         </>

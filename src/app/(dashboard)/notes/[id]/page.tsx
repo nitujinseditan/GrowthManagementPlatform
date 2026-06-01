@@ -18,6 +18,7 @@ import {
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Spinner from "@/components/ui/Spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Note } from "@/types";
 
 export default function NoteDetailPage() {
@@ -289,17 +290,13 @@ export default function NoteDetailPage() {
     );
   }
 
-  const tabs = [
-    { key: "edit" as const, label: "编辑", icon: "✏️" },
-    { key: "versions" as const, label: "版本历史", icon: "📋" },
-    { key: "ai" as const, label: "AI 教练", icon: "🤖" },
-  ];
-
   return (
     <div className="max-w-6xl mx-auto">
       {/* 顶部导航栏 */}
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => {
             if (dirtyRef.current) {
               setPendingUrl("/notes");
@@ -308,13 +305,13 @@ export default function NoteDetailPage() {
               router.push("/notes");
             }
           }}
-          className="text-sm text-stone-400 hover:text-stone-600 transition-colors flex items-center gap-1 shrink-0"
+          className="shrink-0"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           返回列表
-        </button>
+        </Button>
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
@@ -329,64 +326,54 @@ export default function NoteDetailPage() {
         </div>
       </div>
 
-      {/* Tab 切换 — 带滑动指示条 */}
-      <div className="relative flex gap-0 mb-6 border-b border-stone-200 overflow-x-auto">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`relative px-5 py-3 text-sm font-medium transition-colors shrink-0
-              ${
-                tab === t.key
-                  ? "text-emerald-600"
-                  : "text-stone-400 hover:text-stone-600"
-              }`}
-          >
-            <span className="flex items-center gap-1.5">
-              <span className="text-base">{t.icon}</span>
-              {t.label}
-            </span>
-            {tab === t.key && (
-              <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-emerald-500 rounded-t-full" />
+      {/* Tab 切换 */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "edit" | "versions" | "ai")}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="edit" className="gap-1.5">
+            <span>✏️</span> 编辑
+          </TabsTrigger>
+          <TabsTrigger value="versions" className="gap-1.5">
+            <span>📋</span> 版本历史
+          </TabsTrigger>
+          <TabsTrigger value="ai" className="gap-1.5">
+            <span>🤖</span> AI 教练
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="edit">
+          <Card className="p-6">
+            <NoteEditor note={note} onSave={handleSave} saving={saving} onDirtyChange={setIsDirty} />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="versions">
+          <Card className="p-6">
+            {diffA && diffB ? (
+              <DiffView
+                noteId={noteId}
+                versionIdA={diffA}
+                versionIdB={diffB}
+                onClose={() => {
+                  setDiffA(null);
+                  setDiffB(null);
+                }}
+              />
+            ) : (
+              <VersionHistory
+                noteId={noteId}
+                onCompare={handleCompare}
+                onRevert={handleRevert}
+              />
             )}
-          </button>
-        ))}
-      </div>
+          </Card>
+        </TabsContent>
 
-      {/* Tab 内容 */}
-      {tab === "edit" && (
-        <Card className="p-6">
-          <NoteEditor note={note} onSave={handleSave} saving={saving} onDirtyChange={setIsDirty} />
-        </Card>
-      )}
-
-      {tab === "versions" && (
-        <Card className="p-6">
-          {diffA && diffB ? (
-            <DiffView
-              noteId={noteId}
-              versionIdA={diffA}
-              versionIdB={diffB}
-              onClose={() => {
-                setDiffA(null);
-                setDiffB(null);
-              }}
-            />
-          ) : (
-            <VersionHistory
-              noteId={noteId}
-              onCompare={handleCompare}
-              onRevert={handleRevert}
-            />
-          )}
-        </Card>
-      )}
-
-      {tab === "ai" && (
-        <Card className="p-6">
-          <ChatPanel noteId={noteId} />
-        </Card>
-      )}
+        <TabsContent value="ai">
+          <Card className="p-6">
+            <ChatPanel noteId={noteId} />
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <PublishDialog
         open={publishOpen}
