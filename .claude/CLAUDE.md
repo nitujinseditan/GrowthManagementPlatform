@@ -2,17 +2,31 @@
 
 你生成任何前端界面代码（React/Next.js 组件、页面、样式）时，必须遵守以下设计原则：
 
-1. 极简暖灰：界面以 stone 暖灰色系为主（背景 stone-50 #fafaf9 / 白色 #ffffff），核心操作按钮使用 emerald #10b981，文字使用 stone-700/900（非冷灰 gray 系）。
-2. 柔光聚焦：输入框 focus 使用 `shadow-[0_0_0_3px_rgba(16,185,129,0.12)]`（非 ring-2），卡片 hover 使用 `translateY(-4px) + shadow-lg`，250ms ease-out。
-3. 高可读性：正文使用系统默认字体（system-ui, -apple-system），英文优先用 Inter；编辑器使用 font-mono。行距 1.5，字号不小于 14px。
-4. 间距系统：以 8px 为基数（4,8,16,24,32），卡片内边距 ≥16px，组件之间间距 ≥16px。
-5. 圆角：卡片使用 rounded-2xl（16px），按钮/输入框使用 rounded-lg（8px），标签使用 rounded-full。
-6. 动画：使用 8 套预定义 @keyframes（fadeInUp, slideInRight, slideInLeft, breatheGlow, shimmer, typingDot, inkSpread, successPop）+ stagger 延迟入场（stagger-1~8, 0~350ms）+ 全局 `prefers-reduced-motion` 支持。
-7. 留白充足：避免元素拥挤，区块之间至少 24px 留白。
-8. 移动端：侧边栏→抽屉+汉堡菜单、底部固定 Tab 栏（safe-area-bottom）、表单堆叠、TagFilter 横向滚动。
+## 组件库优先级
+1. 优先使用 **shadcn/ui** 组件（`src/components/ui/`）→ 已安装 Button, Card, Input, Textarea, Dialog, DropdownMenu, Tabs, Toast, Tooltip, Separator, Badge, Skeleton
+2. 自定义组件使用 `cn()` 工具函数合并类名（来自 `@/lib/utils`，基于 clsx + tailwind-merge）
+3. Button/Card/Badge 的旧版 API（default export）兼容仍可用，新代码应使用 shadcn compound/variant API
+
+## 设计令牌（CSS 变量 + Tailwind 语义类）
+- 使用语义类名：`bg-primary` / `text-muted-foreground` / `border-input` / `bg-accent` 等
+- 可用原生 Tailwind 色板（stone-*, emerald-*, red-*）作为补充，不强制替换
+- 圆角使用：`rounded-md`（按钮/输入框）、`rounded-lg`（卡片）、`rounded-full`（标签）
+- 阴影使用：`shadow-sm` / `shadow-md` / `shadow-lg`
+
+## 视觉规范
+1. **极简暖灰**：背景 stone-50/white，主按钮 emerald primary，文字 stone 色系
+2. **柔光聚焦**：输入框使用 shadcn 标准 `focus-visible:ring-2 focus-visible:ring-ring`，卡片悬浮 `hover:shadow-lg hover:-translate-y-1`
+3. **高可读性**：system-ui, -apple-system, Inter；编辑器 font-mono；行距 1.5，字号 ≥14px
+4. **间距系统**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px
+5. **动画**：使用 tailwind.config.ts 中注册的 animate-* 工具类，stagger 延迟入场，prefers-reduced-motion 支持
+6. **留白**：区块间 ≥24px
+7. **移动端**：触摸目标 ≥44px，底部 Tab 栏 safe-area-bottom，侧边栏→抽屉
+
+## 文件结构
+- shadcn 组件：`src/components/ui/[name].tsx`（自动生成，使用 design tokens）
+- 自定义组件：`src/components/[domain]/[Name].tsx`
+- 工具函数：`src/lib/utils.ts`（cn）, `src/lib/export.ts`, `src/lib/uploadImage.ts`
 
 你必须在生成每一段 UI 代码之前，主动在脑海中检查上述规则。如果现有代码不符合，优先修改使其符合。完成后不需要额外报告，直接输出最终代码即可。
-
-另外，如果项目里还没有安装 no-slop MCP 服务器，请先执行：在 .vscode/mcp.json 中添加 no-slop 配置（type: stdio, command: npx, args: ["-y", "no-slop-mcp"]），之后每次生成组件后自动调用 review_component 和 verify_component 进行质量验证（auto_fix: true）。
 
 注意：因为我已经开启了 auto-approve，你可以直接创建和修改文件，无需询问。

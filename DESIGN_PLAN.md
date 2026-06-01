@@ -2,7 +2,7 @@
 
 > 基于 frontend-design 技能的四问框架，在现有设计系统基础上进行审美提升。
 > 
-> **2026-06-01 更新**：编辑器已升级 13 项功能（自动保存/草稿恢复/禅模式/TOC/斜杠命令/快速切换/导出/代码高亮/置顶/回收站/描述/封面/图标/保存时间），新增 4 个 UI 组件（Tooltip/DropdownMenu/Toast/Toggle），所有新功能均遵循本文档的"温润书香"美学规范——stone 暖灰 + emerald 主色 + 8px 间距 + 自然呼吸动画。
+> **2026-06-01 更新 v2**：设计系统全面升级 — shadcn/ui 组件库（Button/Card/Input/Dialog/Tabs/Toast/Badge 等 11 个 Radix 组件）+ HSL 设计令牌（primary/secondary/muted/accent/card 等 12 组 semantic tokens）+ cva/cn 工具链。编辑器 13 项功能已完成，所有新功能均遵循本文档的"温润书香"美学规范。
 
 ---
 

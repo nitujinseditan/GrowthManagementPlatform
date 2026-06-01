@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（编辑器专业化升级：13 项新功能 + Schema 扩展）
+> 最后更新：2026-06-01（设计系统升级：shadcn/ui 组件库 + HSL 设计令牌 + Radix 无障碍原语）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -20,7 +20,7 @@
 | 层面 | 选型 | 说明 |
 |------|------|------|
 | 框架 | Next.js 14 (App Router) | 前后端一体，API Routes 替代独立后端 |
-| UI | React 18 + Tailwind CSS 3.4 | 手写组件，无第三方 UI 库 |
+| UI | React 18 + Tailwind CSS 3.4 + **shadcn/ui** (Radix) | shadcn/ui 组件库 + design tokens (HSL) + cva/cn 工具链 |
 | 数据库 | SQLite（sql.js WASM 版）+ Drizzle ORM | `data/growth-second-brain.db` 单文件，零配置 |
 | 认证 | NextAuth.js v5 (Credentials + JWT) | 邮箱密码登录 + 邮箱验证，含 CSRF 保护 |
 | AI | DeepSeek API（compatible OpenAI SDK）| deepseek-v4-flash 日常 / deepseek-v4-pro 深度 |
@@ -44,7 +44,7 @@ whatisthat/
 │   │   ├── api/                         # ~18 个 RESTful 端点
 │   │   ├── layout.tsx, page.tsx, globals.css
 │   ├── components/
-│   │   ├── ui/           # Button, Card, Input, Textarea, Modal, Badge, Spinner, Tooltip, DropdownMenu, Toast, Toggle, QuickSwitcher
+│   │   ├── ui/           # shadcn/ui 组件: Button, Card, Input, Textarea, Badge, Dialog, DropdownMenu, Toast, Toaster, Tooltip, Tabs, Separator, Skeleton + 自定义: Modal, Spinner, Toggle, QuickSwitcher
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
 │   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
@@ -139,6 +139,7 @@ whatisthat/
 - [x] **数据安全** 🆕 — 测试数据清理必须先备份 + SQL DELETE 精确删除，禁止 rm -f 删库
 - [x] **UI 审美全面优化** 🆕 — 22 文件重构：stone 暖灰配色、emerald 柔光聚焦、卡片悬浮微交互、8 套 CSS 动画、即时表单校验、移动端底部 Tab 栏 + 抽屉侧边栏、时间轴版本历史、无障碍支持（prefers-reduced-motion/ARIA）→ [DESIGN_PLAN.md](DESIGN_PLAN.md) + [INTERACTION_PLAN.md](INTERACTION_PLAN.md) + [UI_OPTIMIZATION_SUMMARY.md](UI_OPTIMIZATION_SUMMARY.md)
 - [x] **Markdown 编辑器** — 双栏实时预览、11→15 按钮工具栏、Ctrl+B/I/K 快捷键、写作统计
+- [x] **设计系统全面升级** 🆕 — shadcn/ui 组件库 + HSL 设计令牌 + Radix 无障碍原语 + semantic color tokens (primary/secondary/muted/accent/card)
 - [x] **编辑器专业化升级** 🆕 — 13 项新功能 + 6 个 Schema 新列：
   - ⏱ **自动保存** — 停笔 2 秒自动创建版本（commitMessage="自动保存"），状态栏实时指示
   - 📝 **草稿恢复** — localStorage 防抖保存 + 恢复/丢弃提示 banner
@@ -159,13 +160,16 @@ whatisthat/
 
 ## 八、UI 设计规范（必须遵守）
 
-1. **极简暖灰**：背景 #fafaf9（stone-50）/ #ffffff，主按钮 emerald #10b981，文字 stone 色系（非冷灰 gray）
-2. **柔光聚焦**：输入框 focus 使用 `shadow-[0_0_0_3px_rgba(16,185,129,0.12)]`（非 ring-2），卡片悬浮 `translateY(-4px) + shadow-lg`
-3. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px；编辑器使用 font-mono
-4. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px
-5. **圆角**：8px→16px（rounded-lg→rounded-2xl 卡片），按钮/输入框 8px
-6. **动画**：11 套 CSS @keyframes（fadeInUp, slideInRight, slideInLeft, breatheGlow, shimmer, typingDot, inkSpread, successPop, **toastIn**, **scaleIn**）+ stagger 延迟入场 + zen-mode 全屏 CSS + print 打印样式 + prefers-reduced-motion 支持
-7. **留白**：区块间 ≥24px
+1. **组件库**：使用 shadcn/ui（Radix 原语 + cva variants），`src/components/ui/` 目录；自定义组件用 `cn()` 合并类名
+2. **设计令牌（HSL）**：所有颜色通过 CSS 变量引用（`--primary`, `--secondary`, `--muted`, `--accent`, `--background`, `--foreground` 等），Tailwind 用 `bg-primary`/`text-muted-foreground` 语义类
+3. **极简暖灰**：背景 `hsl(var(--background))` (#fafaf9 stone-50)，主按钮 `hsl(var(--primary))` (emerald #10b981)
+4. **柔光聚焦**：输入框 focus 使用 `focus-visible:ring-2 focus-visible:ring-ring` (shadcn 标准)，卡片悬浮 `hover:shadow-lg hover:-translate-y-1`
+5. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px；编辑器使用 font-mono
+6. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px（shadcn Card: p-6）
+7. **圆角**：8px 基数（rounded-lg），卡片 rounded-xl，按钮/输入框 rounded-md
+8. **动画**：Tailwind 配置集中注册 11 套 @keyframes + animate-* 工具类 + stagger 延迟 + zen-mode + print + prefers-reduced-motion
+9. **留白**：区块间 ≥24px
+10. **移动端**：触摸目标 ≥44px，底部 Tab 栏 fixed，侧边栏→抽屉
 
 ---
 
