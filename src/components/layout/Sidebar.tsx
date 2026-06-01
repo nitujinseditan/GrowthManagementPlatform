@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import ProjectTree from "@/components/projects/ProjectTree";
 
 interface SidebarProps {
   userName?: string;
@@ -104,6 +105,16 @@ export default function Sidebar({ userName, onClose }: SidebarProps) {
             );
           })}
         </nav>
+
+        <Separator className="my-3" />
+
+        {/* 项目树 */}
+        <div className="px-1">
+          <p className="px-2 mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            项目
+          </p>
+          <ProjectTree />
+        </div>
       </ScrollArea>
 
       {/* 用户区 */}

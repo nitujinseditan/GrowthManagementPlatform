@@ -101,9 +101,19 @@ const MIGRATIONS_V2 = `
   ALTER TABLE notes ADD COLUMN last_saved_at INTEGER;
 `;
 
-// 迁移 V3：Phase 4 — note_versions 新增 content_html 列（Novel 编辑器双格式存储）
+// 迁移 V3：Phase 4-5 — content_html + projects 表 + notes.project_id
 const MIGRATIONS_V3 = `
   ALTER TABLE note_versions ADD COLUMN content_html TEXT;
+  CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    parent_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+    icon TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+  ALTER TABLE notes ADD COLUMN project_id INTEGER;
 `;
 
 async function initDatabase(): Promise<void> {

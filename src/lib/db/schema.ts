@@ -28,6 +28,7 @@ export const notes = sqliteTable("notes", {
   coverImageUrl: text("cover_image_url"),
   icon: text("icon"),
   lastSavedAt: integer("last_saved_at", { mode: "timestamp" }),
+  projectId: integer("project_id"), // Phase 5: 归属项目，外键在迁移中添加
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
@@ -140,4 +141,19 @@ export const emailVerifications = sqliteTable("email_verifications", {
   email: text("email").notNull(),
   token: text("token").notNull().unique(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+});
+
+// 项目表（自引用树结构，支持无限层级）
+export const projects = sqliteTable("projects", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  parentId: integer("parent_id"), // 自引用，外键在迁移中添加
+  icon: text("icon"), // emoji 图标
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });

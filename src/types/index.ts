@@ -19,6 +19,7 @@ export interface Note {
   coverImageUrl: string | null;
   icon: string | null;
   lastSavedAt: Date | null;
+  projectId: number | null;
   createdAt: Date;
   updatedAt: Date;
   tags?: Tag[];

@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（Phase 1-4 前端重构：设计令牌 + shadcn + 布局 + Novel 编辑器）
+> 最后更新：2026-06-01（Phase 1-7 全部完成：前端 UI/UX 全面升级至 Notion 级别）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -45,6 +45,7 @@ whatisthat/
 │   │   ├── layout.tsx, page.tsx, globals.css
 │   ├── components/
 │   │   ├── ui/           # shadcn/ui 标准组件: button, card, input, textarea, badge, dialog, dropdown-menu, tabs, toast, toaster, tooltip, separator, skeleton, avatar, progress, scroll-area, toggle + 自定义: Spinner, QuickSwitcher
+│   │   ├── projects/     # ProjectTree（递归项目树组件）
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
 │   │   ├── notes/        # NoteEditor(Novel), NovelEditor, novelExtensions, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
@@ -83,6 +84,7 @@ whatisthat/
 | ai_conversations | id, user_id, note_id | per-note 对话 |
 | ai_messages | id, conversation_id, role, content | role ∈ {user, assistant} |
 | **email_verifications** 🆕 | id, email, token, expires_at | 注册验证 token，10分钟过期 |
+| **projects** 🆕 | id, user_id, name, parent_id, icon, sort_order | 自引用树结构，支持无限层级 |
 
 ---
 
@@ -107,6 +109,8 @@ whatisthat/
 | POST | /api/notes/[id]/ai/conversations/[cid]/messages | 是 | |
 | GET | /api/tags | 否 | |
 | POST | /api/upload | 是 | 图片上传，返回 { url }，保存到 public/uploads/ |
+| GET/POST | /api/projects | 是 | 获取项目树 / 创建项目 |
+| PATCH/DELETE/PUT | /api/projects/[id] | 是 | 更新 / 删除 / 移动项目 |
 
 ---
 
@@ -218,9 +222,9 @@ whatisthat/
 | Phase 2 | shadcn/ui 组件标准化 — Button/Card/Input/Textarea/Badge 替换 + Modal/DropdownMenu/Toggle 删除 + avatar/progress/scroll-area/toggle 安装 | ✅ 完成 |
 | Phase 3 | 布局重构 — Sidebar shadcn 化（Button/Avatar/ScrollArea）+ 移动端 safe-area + 内容区入场动画 | ✅ 完成 |
 | Phase 4 | Novel 编辑器集成 — Tiptap 富文本 + 双格式存储（Markdown+HTML）+ 图片上传 API + turndown 转换 | ✅ 完成 |
-| Phase 5 | 项目树管理 — projects 表 + 侧边栏内嵌树 + API | ⏳ 待做 |
-| Phase 6 | 目录索引 — Novel 编辑器实时标题提取 + 跳转 | ⏳ 待做 |
-| Phase 7 | 动画与细节打磨 | ⏳ 待做 |
+| Phase 5 | 项目树管理 — projects 表（自引用无限层级）+ CRUD API + ProjectTree 组件（递归渲染/展开折叠/重命名/删除）+ 侧边栏集成 + 笔记列表 projectId 筛选 | ✅ 完成 |
+| Phase 6 | 目录索引 — TableOfContents 支持 HTML 解析 + Novel 编辑器右侧目录面板 | ✅ 完成 |
+| Phase 7 | 动画与细节 — 页面入场 fade-in-up + 按钮 active:scale + 卡片 hover 上浮 + 输入框柔光晕 + stagger 列表动画 + prefers-reduced-motion | ✅ 完成 |
 
 ---
 

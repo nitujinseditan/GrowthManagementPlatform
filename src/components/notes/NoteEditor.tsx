@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
+import TableOfContents from "@/components/notes/TableOfContents";
 import type { Note } from "@/types";
 
 // NovelEditor 动态导入（避免 SSR 问题）
@@ -298,13 +299,16 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
         </button>
       </div>
 
-      {/* Novel 编辑器 */}
-      <div className="editor-container border border-border rounded-xl bg-white min-h-[420px] p-4">
-        <NovelEditor
-          initialContent={contentHtml}
-          onUpdate={setContentHtml}
-          placeholder="开始写作... 输入 / 唤出命令菜单"
-        />
+      {/* Novel 编辑器 + 目录 */}
+      <div className="flex gap-4">
+        <div className="editor-container flex-1 min-w-0 border border-border rounded-xl bg-white min-h-[420px] p-4">
+          <NovelEditor
+            initialContent={contentHtml}
+            onUpdate={setContentHtml}
+            placeholder="开始写作... 输入 / 唤出命令菜单"
+          />
+        </div>
+        <TableOfContents htmlContent={contentHtml} />
       </div>
 
       {/* 标签区域 */}
