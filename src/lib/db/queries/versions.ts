@@ -34,7 +34,8 @@ export async function saveVersion(
   noteId: number,
   userId: number,
   content: string,
-  commitMessage?: string
+  commitMessage?: string,
+  contentHtml?: string
 ): Promise<NoteVersion | null> {
   const db = await getDb();
 
@@ -61,6 +62,7 @@ export async function saveVersion(
       userId,
       versionNumber: newVersionNumber,
       content,
+      contentHtml: contentHtml || null,
       commitMessage: commitMessage || null,
     })
     .returning()

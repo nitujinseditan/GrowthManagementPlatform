@@ -32,6 +32,7 @@ export interface NoteVersion {
   userId: number;
   versionNumber: number;
   content: string;
+  contentHtml: string | null; // Novel 编辑器输出的 HTML
   commitMessage: string | null;
   createdAt: Date;
 }
@@ -113,6 +114,7 @@ export interface UpdateNoteInput {
 
 export interface SaveVersionInput {
   content: string;
+  contentHtml?: string;
   commitMessage?: string;
 }
 

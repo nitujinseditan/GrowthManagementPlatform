@@ -6,6 +6,7 @@ import { getNotesByUser, createNote } from "@/lib/db/queries/notes";
 const createNoteSchema = z.object({
   title: z.string().min(1, "标题不能为空").max(200),
   content: z.string().optional(),
+  contentHtml: z.string().optional(),
   tags: z.array(z.string()).optional(),
   commitMessage: z.string().optional(),
 });
@@ -38,8 +39,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, content, tags, commitMessage } = parsed.data;
-    const note = await createNote(userId, title, content, tags, commitMessage);
+    const { title, content, contentHtml, tags, commitMessage } = parsed.data;
+    const note = await createNote(userId, title, content, tags, commitMessage, contentHtml);
 
     return NextResponse.json({ note }, { status: 201 });
   } catch (error: unknown) {

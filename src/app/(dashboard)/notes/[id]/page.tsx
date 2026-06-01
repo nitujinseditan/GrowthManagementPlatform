@@ -209,7 +209,8 @@ export default function NoteDetailPage() {
     title: string,
     content: string,
     commitMessage: string,
-    tags: string[]
+    tags: string[],
+    contentHtml?: string
   ) => {
     setSaving(true);
     await fetch(`/api/notes/${noteId}`, {
@@ -220,7 +221,7 @@ export default function NoteDetailPage() {
     await fetch(`/api/notes/${noteId}/versions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, commitMessage }),
+      body: JSON.stringify({ content, contentHtml, commitMessage }),
     });
     setSaving(false);
     loadNote();

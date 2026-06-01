@@ -47,6 +47,7 @@ export const noteVersions = sqliteTable("note_versions", {
     .references(() => users.id),
   versionNumber: integer("version_number").notNull(),
   content: text("content").notNull().default(""),
+  contentHtml: text("content_html"), // Novel 编辑器输出的 HTML（Phase 4 新增）
   commitMessage: text("commit_message"), // 可选：本次修改说明
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

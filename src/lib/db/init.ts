@@ -101,6 +101,11 @@ const MIGRATIONS_V2 = `
   ALTER TABLE notes ADD COLUMN last_saved_at INTEGER;
 `;
 
+// 迁移 V3：Phase 4 — note_versions 新增 content_html 列（Novel 编辑器双格式存储）
+const MIGRATIONS_V3 = `
+  ALTER TABLE note_versions ADD COLUMN content_html TEXT;
+`;
+
 async function initDatabase(): Promise<void> {
   if (_db && _sqlDb) return;
 
@@ -131,6 +136,12 @@ async function initDatabase(): Promise<void> {
     _sqlDb.exec(MIGRATIONS_V2);
   } catch {
     // V2 列已存在，安全忽略
+  }
+
+  try {
+    _sqlDb.exec(MIGRATIONS_V3);
+  } catch {
+    // V3 列已存在，安全忽略
   }
 
   _db = drizzle(_sqlDb, { schema });

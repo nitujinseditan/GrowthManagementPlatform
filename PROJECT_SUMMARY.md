@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（Phase 1-2 前端重构：设计令牌统一 + shadcn/ui 组件标准化）
+> 最后更新：2026-06-01（Phase 1-4 前端重构：设计令牌 + shadcn + 布局 + Novel 编辑器）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -46,7 +46,7 @@ whatisthat/
 │   ├── components/
 │   │   ├── ui/           # shadcn/ui 标准组件: button, card, input, textarea, badge, dialog, dropdown-menu, tabs, toast, toaster, tooltip, separator, skeleton, avatar, progress, scroll-area, toggle + 自定义: Spinner, QuickSwitcher
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
-│   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
+│   │   ├── notes/        # NoteEditor(Novel), NovelEditor, novelExtensions, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
 │   │   ├── ai/           # ChatPanel
 │   │   └── markdown/     # MarkdownToolbar, MarkdownPreview, WritingStats
@@ -75,7 +75,7 @@ whatisthat/
 |----|---------|------|
 | users | id, email, name, password_hash, **email_verified** | bcrypt 12轮，email_verified NULL=未验证 |
 | notes | id, user_id, title, current_version_id, is_public, **is_pinned**, **deleted_at**, **description**, **cover_image_url**, **icon**, **last_saved_at** | 🆕 6 个阶段二新字段 |
-| note_versions | id, note_id, user_id, version_number, content, commit_message | 不可变历史 |
+| note_versions | id, note_id, user_id, version_number, content, **content_html**, commit_message | 不可变历史，双格式存储 |
 | tags | id, name (UNIQUE) | |
 | note_tags | note_id, tag_id (复合主键) | 多对多 |
 | posts | id, user_id, note_id, title, excerpt | note_id 溯源 |
@@ -106,6 +106,7 @@ whatisthat/
 | GET/POST | /api/notes/[id]/ai/conversations | 是 | |
 | POST | /api/notes/[id]/ai/conversations/[cid]/messages | 是 | |
 | GET | /api/tags | 否 | |
+| POST | /api/upload | 是 | 图片上传，返回 { url }，保存到 public/uploads/ |
 
 ---
 
@@ -215,8 +216,8 @@ whatisthat/
 |-------|------|------|
 | Phase 1 | 设计令牌系统 — globals.css HSL 令牌 + tailwind.config.ts CSS 变量引用 | ✅ 完成 |
 | Phase 2 | shadcn/ui 组件标准化 — Button/Card/Input/Textarea/Badge 替换 + Modal/DropdownMenu/Toggle 删除 + avatar/progress/scroll-area/toggle 安装 | ✅ 完成 |
-| Phase 3 | 布局重构 — Sidebar shadcn 化 + 移动端优化 | ⏳ 待做 |
-| Phase 4 | Novel 编辑器集成 — Tiptap 富文本 + 双格式存储 + 图片上传 | ⏳ 待做 |
+| Phase 3 | 布局重构 — Sidebar shadcn 化（Button/Avatar/ScrollArea）+ 移动端 safe-area + 内容区入场动画 | ✅ 完成 |
+| Phase 4 | Novel 编辑器集成 — Tiptap 富文本 + 双格式存储（Markdown+HTML）+ 图片上传 API + turndown 转换 | ✅ 完成 |
 | Phase 5 | 项目树管理 — projects 表 + 侧边栏内嵌树 + API | ⏳ 待做 |
 | Phase 6 | 目录索引 — Novel 编辑器实时标题提取 + 跳转 | ⏳ 待做 |
 | Phase 7 | 动画与细节打磨 | ⏳ 待做 |

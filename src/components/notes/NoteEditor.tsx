@@ -1,21 +1,30 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
+import TurndownService from "turndown";
 import Input from "@/components/ui/Input";
-import Textarea from "@/components/ui/Textarea";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import {
-  MarkdownToolbar,
-  MarkdownPreview,
-  WritingStats,
-} from "@/components/markdown";
 import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
-import TableOfContents from "@/components/notes/TableOfContents";
-import SlashCommandMenu from "@/components/notes/SlashCommandMenu";
-import type { SlashCommand } from "@/components/notes/slashCommands";
-import { downloadMarkdown, exportPdf } from "@/lib/export";
 import type { Note } from "@/types";
+
+// NovelEditor 动态导入（避免 SSR 问题）
+const NovelEditor = dynamic(() => import("./NovelEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-[300px] flex items-center justify-center text-muted-foreground text-sm">
+      加载编辑器...
+    </div>
+  ),
+});
+
+// turndown 实例：HTML → Markdown
+const turndown = new TurndownService({
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
+  bulletListMarker: "-",
+});
 
 interface NoteEditorProps {
   note: Note | null;
@@ -23,33 +32,25 @@ interface NoteEditorProps {
     title: string,
     content: string,
     commitMessage: string,
-    tags: string[]
+    tags: string[],
+    contentHtml?: string
   ) => Promise<void>;
   saving: boolean;
-  /** 脏状态变化回调 — 通知页面是否有未保存的更改 */
   onDirtyChange?: (dirty: boolean) => void;
 }
 
 export default function NoteEditor({ note, onSave, saving, onDirtyChange }: NoteEditorProps) {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [contentHtml, setContentHtml] = useState("");
   const [commitMessage, setCommitMessage] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [description, setDescription] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
   const [zenMode, setZenMode] = useState(false);
   const zenModeRef = useRef(false);
   zenModeRef.current = zenMode;
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const previewContainerRef = useRef<HTMLDivElement>(null);
-
-  // 斜杠命令状态
-  const [slashOpen, setSlashOpen] = useState(false);
-  const [slashQuery, setSlashQuery] = useState("");
-  const slashStartRef = useRef<number>(-1); // / 的位置
 
   // 禅模式：切换 body class
   useEffect(() => {
@@ -63,33 +64,30 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
     };
   }, [zenMode]);
 
-  // 脏状态追踪：比较当前内容与最后保存快照
-  const lastSavedSnapshot = useRef<{ title: string; content: string; tags: string[] } | null>(null);
+  // 脏状态追踪
+  const lastSavedSnapshot = useRef<{ title: string; contentHtml: string; tags: string[] } | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
   const checkDirty = useCallback(
-    (currentTitle: string, currentContent: string, currentTags: string[]) => {
+    (currentTitle: string, currentHtml: string, currentTags: string[]) => {
       const snap = lastSavedSnapshot.current;
       if (!snap) {
-        // 无快照时：有实质内容即视为 dirty
-        return currentTitle.trim().length > 0 || currentContent.trim().length > 0;
+        return currentTitle.trim().length > 0 || currentHtml.trim().length > 0;
       }
       return (
         currentTitle !== snap.title ||
-        currentContent !== snap.content ||
+        currentHtml !== snap.contentHtml ||
         JSON.stringify(currentTags) !== JSON.stringify(snap.tags)
       );
     },
     []
   );
 
-  // 内容变化时更新脏状态
   useEffect(() => {
-    const dirty = checkDirty(title, content, tags);
+    const dirty = checkDirty(title, contentHtml, tags);
     setIsDirty(dirty);
-  }, [title, content, tags, checkDirty]);
+  }, [title, contentHtml, tags, checkDirty]);
 
-  // 向页面报告脏状态变化
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
@@ -99,15 +97,14 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
   const lastSaved = note?.updatedAt ? new Date(note.updatedAt).getTime() : undefined;
   const draft = useDraftRecovery({
     draftKey,
-    data: { title, content, tags },
+    data: { title, content: contentHtml, tags },
     lastSavedTimestamp: lastSaved,
   });
 
-  // 草稿恢复处理
   const handleRecover = () => {
     if (draft.draft) {
       setTitle(draft.draft.title);
-      setContent(draft.draft.content);
+      setContentHtml(draft.draft.content);
       setTags(draft.draft.tags);
     }
     draft.recover();
@@ -117,15 +114,18 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
   useEffect(() => {
     if (note) {
       setTitle(note.title);
-      setContent(note.currentVersion?.content || "");
+      // 优先使用 contentHtml，如果没有则用 content（Markdown）
+      const html = note.currentVersion?.contentHtml || "";
+      const md = note.currentVersion?.content || "";
+      // 如果没有 HTML 但有 Markdown，用 Markdown（旧版本兼容）
+      setContentHtml(html || (md ? `<p>${md.replace(/\n/g, "</p><p>")}</p>` : ""));
       const loadedTags = (note.tags || []).map((t) => t.name);
       setTags(loadedTags);
       setDescription(note.description || "");
       setIsPinned(note.isPinned || false);
-      // 初始化脏状态快照（加载完成后视为"已保存"状态）
       lastSavedSnapshot.current = {
         title: note.title,
-        content: note.currentVersion?.content || "",
+        contentHtml: html || "",
         tags: loadedTags,
       };
     }
@@ -158,142 +158,44 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
     }
   };
 
-  // 斜杠命令检测
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value;
-    const cursorPos = e.target.selectionStart;
-    setContent(newValue);
-
-    // 检测是否在行首或空格后输入了 /
-    const textBeforeCursor = newValue.slice(0, cursorPos);
-    const slashMatch = textBeforeCursor.match(/(?:^|[\s\n])(\/)([^\s\n]*)$/);
-
-    if (slashMatch) {
-      const slashPos = cursorPos - slashMatch[2].length - 1;
-      slashStartRef.current = slashPos;
-      setSlashQuery(slashMatch[2]);
-      setSlashOpen(true);
-    } else {
-      setSlashOpen(false);
-      slashStartRef.current = -1;
-    }
-  };
-
-  // 斜杠命令选择
-  const handleSlashSelect = (cmd: SlashCommand) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = slashStartRef.current;
-    if (start < 0) return;
-
-    const cursorPos = textarea.selectionStart;
-    const before = content.slice(0, start);
-    const after = content.slice(cursorPos);
-
-    const newText = before + cmd.before + cmd.after + after;
-    setContent(newText);
-
-    // 计算光标位置
-    const cursorTarget = start + cmd.before.length;
-
-    // 使用 setTimeout 确保 React 更新后再设置光标
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(cursorTarget, cursorTarget);
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    }, 0);
-
-    setSlashOpen(false);
-    setSlashQuery("");
-    slashStartRef.current = -1;
-  };
-
-  const handleSlashClose = () => {
-    setSlashOpen(false);
-    setSlashQuery("");
-    slashStartRef.current = -1;
-  };
-
   // 保存
   const handleSave = async () => {
     setSaved(false);
+    // 将 HTML 转为 Markdown 用于 diff 和旧版本兼容
+    const markdown = contentHtml ? turndown.turndown(contentHtml) : "";
     await onSave(
       title,
-      content,
+      markdown,
       commitMessage || (undefined as unknown as string),
-      tags
+      tags,
+      contentHtml
     );
     setCommitMessage("");
     setSaved(true);
-    // 更新快照，将脏状态重置
-    lastSavedSnapshot.current = { title, content, tags: [...tags] };
-    clearDraft(draftKey); // 保存成功后清除草稿
+    lastSavedSnapshot.current = { title, contentHtml, tags: [...tags] };
+    clearDraft(draftKey);
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // 快捷键
+  // 快捷键：Ctrl+S 保存、F11 禅模式
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const textarea = textareaRef.current;
-      const isTextareaFocused = document.activeElement === textarea;
-
-      // Ctrl+S / Cmd+S → 保存
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
         return;
       }
-
-      // F11 或 Ctrl+Shift+F → 禅模式
       if (e.key === "F11" || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "f")) {
         e.preventDefault();
         setZenMode((prev) => !prev);
         return;
       }
-
-      // Escape → 退出禅模式
       if (e.key === "Escape" && zenModeRef.current) {
         e.preventDefault();
         setZenMode(false);
         return;
       }
-
-      // 以下快捷键仅在 Textarea 聚焦时生效
-      if (!isTextareaFocused) return;
-
-      const start = textarea!.selectionStart;
-      const end = textarea!.selectionEnd;
-      const selected = textarea!.value.substring(start, end);
-      const wrap = (before: string, after: string) => {
-        e.preventDefault();
-        const replacement = before + selected + after;
-        const setter = Object.getOwnPropertyDescriptor(
-          window.HTMLTextAreaElement.prototype,
-          "value"
-        )?.set;
-        setter?.call(
-          textarea,
-          textarea!.value.substring(0, start) +
-            replacement +
-            textarea!.value.substring(end)
-        );
-        textarea!.dispatchEvent(new Event("input", { bubbles: true }));
-        textarea!.setSelectionRange(
-          start + before.length,
-          start + before.length + selected.length
-        );
-      };
-
-      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
-        wrap("**", "**");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "i") {
-        wrap("*", "*");
-      } else if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        wrap("[", "](url)");
-      }
     };
-
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   });
@@ -302,8 +204,7 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
     <div className="space-y-4">
       {/* 草稿恢复提示 */}
       {draft.hasDraft && draft.draft && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl
-                        motion-safe:animate-[fadeInUp_0.3s_ease-out_both]">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl motion-safe:animate-[fadeInUp_0.3s_ease-out_both]">
           <div className="flex items-center gap-2 text-sm text-amber-700 min-w-0">
             <span className="text-base shrink-0">📝</span>
             <span className="truncate">
@@ -311,22 +212,12 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
             </span>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={handleRecover}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-emerald-500
-                         rounded-lg hover:bg-emerald-600 transition-colors"
-            >
+            <Button size="sm" variant="gradient" onClick={handleRecover}>
               恢复
-            </button>
-            <button
-              type="button"
-              onClick={draft.discard}
-              className="px-3 py-1.5 text-xs font-medium text-stone-500 bg-stone-100
-                         rounded-lg hover:bg-stone-200 transition-colors"
-            >
+            </Button>
+            <Button size="sm" variant="secondary" onClick={draft.discard}>
               丢弃
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -354,8 +245,7 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
               } catch { setIsPinned(!newPinned); }
             }}
             title={isPinned ? "取消置顶" : "置顶"}
-            className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-sm
-                       transition-colors
+            className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors
                        ${isPinned
                          ? "bg-emerald-50 text-emerald-600"
                          : "text-stone-300 hover:text-amber-500 hover:bg-stone-50"}`}
@@ -382,50 +272,20 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
             }
           }}
           placeholder="添加简短描述..."
-          className="text-sm text-stone-400 border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent"
+          className="text-sm text-muted-foreground border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent"
         />
       )}
 
-      {/* 移动端预览切换按钮 + 禅模式按钮 */}
+      {/* 禅模式切换按钮 */}
       <div className="flex items-center gap-2">
-        <div className="lg:hidden flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowPreview(!showPreview)}
-            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-emerald-600
-                       px-3 py-1.5 rounded-lg border border-stone-200 bg-white transition-colors"
-          >
-            {showPreview ? (
-              <>
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                显示预览
-              </>
-            ) : (
-              <>
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                仅编辑
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* 禅模式切换按钮 */}
         <button
           type="button"
           onClick={() => setZenMode(!zenMode)}
           title={zenMode ? "退出禅模式 (F11)" : "禅模式 (F11)"}
-          className={`hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border
-                       transition-colors
-                       ${
-                         zenMode
-                           ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                           : "text-stone-400 hover:text-stone-600 border-stone-200 bg-white"
-                       }`}
+          className={`hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors
+                       ${zenMode
+                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                         : "text-muted-foreground hover:text-foreground border-border bg-white"}`}
         >
           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {zenMode ? (
@@ -438,75 +298,18 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
         </button>
       </div>
 
-      {/* 双栏主体：左编辑 右预览 */}
-      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
-        {/* 左栏：编辑区 */}
-        <div className="flex flex-col space-y-3 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex-1 overflow-x-auto">
-              <MarkdownToolbar textareaRef={textareaRef} />
-            </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => downloadMarkdown(title || "未命名", content)}
-                title="导出 Markdown"
-                className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1 rounded-lg
-                         hover:bg-stone-100 transition-colors"
-              >
-                .md
-              </button>
-              <button
-                type="button"
-                onClick={exportPdf}
-                title="导出 PDF"
-                className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1 rounded-lg
-                         hover:bg-stone-100 transition-colors"
-              >
-                PDF
-              </button>
-            </div>
-          </div>
-          <div className="relative flex-1 min-h-0">
-            <Textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleContentChange}
-              placeholder="开始用 Markdown 记录你的想法...&#10;&#10;输入 / 打开命令菜单&#10;## 二级标题&#10;**加粗** *斜体*&#10;- 列表项&#10;> 引用&#10;`行内代码`"
-              className="flex-1 min-h-[420px] resize-none font-mono text-sm leading-relaxed w-full"
-            />
-            <SlashCommandMenu
-              open={slashOpen}
-              query={slashQuery}
-              onSelect={handleSlashSelect}
-              onClose={handleSlashClose}
-            />
-          </div>
-          <WritingStats content={content} />
-        </div>
-
-        {/* 右栏：预览区 + TOC */}
-        <div className="flex gap-0">
-          <div
-            ref={previewContainerRef}
-            className={`${
-              showPreview ? "block" : "hidden lg:block"
-            } flex-1 min-w-0 min-h-[420px] border border-stone-200 rounded-lg bg-white p-5 overflow-y-auto`}
-          >
-            <MarkdownPreview content={content} />
-          </div>
-
-          {/* 目录导航 — xl 屏幕显示 */}
-          <TableOfContents
-            content={content}
-            previewContainerRef={previewContainerRef}
-          />
-        </div>
+      {/* Novel 编辑器 */}
+      <div className="editor-container border border-border rounded-xl bg-white min-h-[420px] p-4">
+        <NovelEditor
+          initialContent={contentHtml}
+          onUpdate={setContentHtml}
+          placeholder="开始写作... 输入 / 唤出命令菜单"
+        />
       </div>
 
       {/* 标签区域 */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1.5">
+        <label className="block text-sm font-medium text-foreground mb-1.5">
           标签
         </label>
         {tags.length > 0 && (
@@ -514,11 +317,20 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
             {tags.map((tag) => (
               <Badge
                 key={tag}
-                variant="primary"
-                removable
-                onRemove={() => removeTag(tag)}
+                variant="default"
+                className="gap-1 pr-1"
               >
                 {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
+                  aria-label="移除"
+                >
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </Badge>
             ))}
           </div>
@@ -538,7 +350,7 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
       </div>
 
       {/* 底部：提交信息 + 保存按钮 */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-stone-100">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-border">
         <Input
           value={commitMessage}
           onChange={(e) => setCommitMessage(e.target.value)}
@@ -546,64 +358,30 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
           className="flex-1 text-sm"
         />
         <Button
+          variant="gradient"
           onClick={handleSave}
           disabled={saving || !title.trim()}
           className="shrink-0"
         >
           {saving ? (
             <span className="flex items-center gap-2">
-              <svg
-                className="animate-spin h-4 w-4"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
               保存中...
             </span>
           ) : saved ? (
             <span className="flex items-center gap-1.5">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2.5}
-                  d="M5 13l4 4L19 7"
-                />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
               已保存
             </span>
           ) : (
             <span className="flex items-center gap-1.5">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
               </svg>
               保存
             </span>
@@ -613,7 +391,7 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
 
       {/* 当前版本信息 */}
       {note?.currentVersion && (
-        <p className="text-xs text-stone-400 flex items-center gap-2">
+        <p className="text-xs text-muted-foreground flex items-center gap-2">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
           当前版本 v{note.currentVersion.versionNumber}
           {note.currentVersion.commitMessage &&

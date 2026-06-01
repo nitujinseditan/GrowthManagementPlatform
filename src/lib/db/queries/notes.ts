@@ -113,7 +113,8 @@ export async function createNote(
   title: string,
   content?: string,
   tagNames?: string[],
-  commitMessage?: string
+  commitMessage?: string,
+  contentHtml?: string
 ): Promise<Note> {
   const db = await getDb();
 
@@ -125,14 +126,15 @@ export async function createNote(
     .get();
 
   // 如果有内容，创建第一个版本
-  if (content) {
+  if (content || contentHtml) {
     const versionResult = db
       .insert(noteVersions)
       .values({
         noteId: noteResult.id,
         userId,
         versionNumber: 1,
-        content,
+        content: content || "",
+        contentHtml: contentHtml || null,
         commitMessage: commitMessage || "初始版本",
       })
       .returning()

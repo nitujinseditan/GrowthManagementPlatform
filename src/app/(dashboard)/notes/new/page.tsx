@@ -13,13 +13,14 @@ export default function NewNotePage() {
     title: string,
     content: string,
     commitMessage: string,
-    tags: string[]
+    tags: string[],
+    contentHtml?: string
   ) => {
     setSaving(true);
     const res = await fetch("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, commitMessage, tags }),
+      body: JSON.stringify({ title, content, contentHtml, commitMessage, tags }),
     });
 
     if (res.ok) {

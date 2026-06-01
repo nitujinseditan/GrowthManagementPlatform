@@ -5,6 +5,7 @@ import { getVersions, saveVersion } from "@/lib/db/queries/versions";
 
 const saveSchema = z.object({
   content: z.string(),
+  contentHtml: z.string().optional(),
   commitMessage: z.string().optional(),
 });
 
@@ -49,7 +50,8 @@ export async function POST(
       noteId,
       userId,
       parsed.data.content,
-      parsed.data.commitMessage
+      parsed.data.commitMessage,
+      parsed.data.contentHtml
     );
 
     if (!version) {

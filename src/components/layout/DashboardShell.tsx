@@ -110,10 +110,10 @@ export default function DashboardShell({
         </div>
 
         {/* 页面内容 */}
-        <div className="flex-1 p-4 md:p-6 overflow-y-auto">{children}</div>
+        <div className="flex-1 p-4 md:p-6 overflow-y-auto animate-fade-in-up">{children}</div>
 
         {/* 移动端底部 Tab 栏 */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-stone-200 z-10 safe-area-bottom">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-border z-10 pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-around h-14">
             {mobileTabs.map((tab) => (
               <Link
