@@ -1,40 +1,91 @@
-interface BadgeProps {
-  children: string;
-  variant?: "default" | "primary" | "emerald";
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
+
+import { cn } from "@/lib/utils"
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  )
+}
+
+// ═══════════════════════════════════════════
+// 向后兼容：旧版 Badge API (variant="primary"|"secondary"|"danger", removable, onRemove)
+// ═══════════════════════════════════════════
+
+type LegacyVariant = "primary" | "secondary" | "danger";
+
+interface LegacyBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: LegacyVariant;
   removable?: boolean;
   onRemove?: () => void;
 }
 
-export default function Badge({
-  children,
-  variant = "default",
-  removable = false,
+function LegacyBadge({
+  variant = "primary",
+  removable,
   onRemove,
-}: BadgeProps) {
-  const variants = {
-    default: "bg-stone-100 text-stone-600",
-    primary: "bg-emerald-50 text-emerald-700",
-    emerald: "bg-emerald-500 text-white",
-  };
-
+  className,
+  children,
+  ...props
+}: LegacyBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors duration-150 ${variants[variant]}`}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+        variant === "primary" &&
+          "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        variant === "secondary" &&
+          "bg-stone-100 text-stone-600 border border-stone-200",
+        variant === "danger" &&
+          "bg-red-50 text-red-600 border border-red-200",
+        className
+      )}
+      {...props}
     >
       {children}
       {removable && (
         <button
+          type="button"
           onClick={(e) => {
-            e.preventDefault();
             e.stopPropagation();
             onRemove?.();
           }}
-          className="ml-0.5 hover:opacity-70 transition-opacity"
-          aria-label={`移除标签 ${children}`}
+          className="ml-0.5 rounded-full p-0.5 hover:bg-black/10 transition-colors"
+          aria-label="移除"
         >
-          ×
+          <X className="h-3 w-3" />
         </button>
       )}
     </span>
   );
 }
+LegacyBadge.displayName = "LegacyBadge";
+
+export default LegacyBadge;
+export { Badge, badgeVariants }

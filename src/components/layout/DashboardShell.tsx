@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
-import { ToastProvider } from "@/components/ui/Toast";
+import { ToastProvider } from "@/components/ui/toast";
+import { Toaster } from "@/components/ui/toaster";
 import QuickSwitcher from "@/components/ui/QuickSwitcher";
 
 interface DashboardShellProps {
@@ -134,6 +135,7 @@ export default function DashboardShell({
       </main>
       </div>
       <QuickSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
+      <Toaster />
     </ToastProvider>
   );
 }
