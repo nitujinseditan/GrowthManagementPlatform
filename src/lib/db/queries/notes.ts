@@ -114,14 +114,15 @@ export async function createNote(
   content?: string,
   tagNames?: string[],
   commitMessage?: string,
-  contentHtml?: string
+  contentHtml?: string,
+  projectId?: number
 ): Promise<Note> {
   const db = await getDb();
 
   // 插入笔记
   const noteResult = db
     .insert(notes)
-    .values({ userId, title })
+    .values({ userId, title, projectId: projectId || null })
     .returning()
     .get();
 

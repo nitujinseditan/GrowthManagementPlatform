@@ -9,6 +9,7 @@ const createNoteSchema = z.object({
   contentHtml: z.string().optional(),
   tags: z.array(z.string()).optional(),
   commitMessage: z.string().optional(),
+  projectId: z.number().optional(),
 });
 
 // GET /api/notes — 获取用户所有笔记
@@ -39,8 +40,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { title, content, contentHtml, tags, commitMessage } = parsed.data;
-    const note = await createNote(userId, title, content, tags, commitMessage, contentHtml);
+    const { title, content, contentHtml, tags, commitMessage, projectId } = parsed.data;
+    const note = await createNote(userId, title, content, tags, commitMessage, contentHtml, projectId);
 
     return NextResponse.json({ note }, { status: 201 });
   } catch (error: unknown) {

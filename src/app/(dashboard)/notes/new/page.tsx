@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import NoteEditor from "@/components/notes/NoteEditor";
 import Card from "@/components/ui/Card";
 
 export default function NewNotePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("project");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async (
@@ -17,10 +19,13 @@ export default function NewNotePage() {
     contentHtml?: string
   ) => {
     setSaving(true);
+    const body: Record<string, unknown> = { title, content, contentHtml, commitMessage, tags };
+    if (projectId) body.projectId = parseInt(projectId, 10);
+
     const res = await fetch("/api/notes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content, contentHtml, commitMessage, tags }),
+      body: JSON.stringify(body),
     });
 
     if (res.ok) {

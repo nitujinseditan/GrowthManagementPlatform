@@ -6,7 +6,13 @@ import { randomUUID } from "crypto";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+const MIME_EXT_MAP: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+};
 
 // POST /api/upload — 上传图片
 export async function POST(req: Request) {
@@ -39,8 +45,8 @@ export async function POST(req: Request) {
       fs.mkdirSync(UPLOAD_DIR, { recursive: true });
     }
 
-    // 生成唯一文件名
-    const ext = file.name.split(".").pop() || "png";
+    // 生成唯一文件名（扩展名从 MIME 类型推导，防止篡改）
+    const ext = MIME_EXT_MAP[file.type] || "bin";
     const fileName = `${randomUUID()}.${ext}`;
     const filePath = path.join(UPLOAD_DIR, fileName);
 

@@ -321,7 +321,7 @@ export default function NoteEditor({ note, onSave, saving, onDirtyChange }: Note
             {tags.map((tag) => (
               <Badge
                 key={tag}
-                variant="default"
+                variant="primary"
                 className="gap-1 pr-1"
               >
                 {tag}

@@ -17,9 +17,7 @@ interface ProjectNode {
 }
 
 interface ProjectTreeProps {
-  /** 外部传入的项目树数据，不传则自动获取 */
   projects?: ProjectNode[];
-  /** 项目数据变化回调 */
   onChange?: () => void;
 }
 
@@ -27,13 +25,13 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
   const [projects, setProjects] = useState<ProjectNode[]>(externalProjects || []);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [creating, setCreating] = useState(false);
+  const [creatingParentId, setCreatingParentId] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const searchParams = useSearchParams();
   const activeProjectId = searchParams.get("project");
 
-  // 获取项目树
   const fetchProjects = useCallback(async () => {
     try {
       const res = await fetch("/api/projects");
@@ -52,22 +50,27 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
     }
   }, [externalProjects, fetchProjects]);
 
-  // 创建项目
-  const handleCreate = async () => {
+  // 创建项目（支持 parentId）
+  const handleCreate = async (parentId: number | null = null) => {
     const name = newName.trim();
     if (!name) {
       setCreating(false);
+      setCreatingParentId(null);
       return;
     }
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, parentId }),
       });
       if (res.ok) {
         setNewName("");
         setCreating(false);
+        setCreatingParentId(null);
+        if (parentId) {
+          setExpanded((prev) => new Set(prev).add(parentId));
+        }
         fetchProjects();
         onChange?.();
       } else {
@@ -79,7 +82,6 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
     }
   };
 
-  // 重命名项目
   const handleRename = async (projectId: number) => {
     if (!editName.trim()) return;
     try {
@@ -97,7 +99,6 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
     } catch { /* 静默 */ }
   };
 
-  // 删除项目
   const handleDelete = async (projectId: number, name: string) => {
     if (!confirm(`确定删除项目「${name}」吗？项目下的笔记不会被删除。`)) return;
     try {
@@ -109,7 +110,6 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
     } catch { /* 静默 */ }
   };
 
-  // 切换展开/折叠
   const toggleExpand = (id: number) => {
     setExpanded((prev) => {
       const next = new Set(prev);
@@ -119,7 +119,35 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
     });
   };
 
-  // 递归渲染项目节点
+  // 开始创建子项目
+  const startCreateChild = (parentId: number) => {
+    setCreating(true);
+    setCreatingParentId(parentId);
+    setNewName("");
+    setExpanded((prev) => new Set(prev).add(parentId));
+  };
+
+  // 渲染子项目创建输入框
+  const renderCreateInput = (parentId: number | null, depth: number) => {
+    if (!creating || creatingParentId !== parentId) return null;
+    return (
+      <div style={{ paddingLeft: `${depth * 16 + 24}px` }} className="py-0.5">
+        <Input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleCreate(parentId);
+            if (e.key === "Escape") { setCreating(false); setCreatingParentId(null); setNewName(""); }
+          }}
+          onBlur={() => { handleCreate(parentId); }}
+          placeholder="项目名称..."
+          className="h-6 text-xs px-1.5 py-0"
+          autoFocus
+        />
+      </div>
+    );
+  };
+
   const renderNode = (node: ProjectNode, depth: number = 0) => {
     const hasChildren = node.children && node.children.length > 0;
     const isExpanded = expanded.has(node.id);
@@ -136,7 +164,6 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
           )}
           style={{ paddingLeft: `${depth * 16 + 8}px` }}
         >
-          {/* 展开/折叠箭头 */}
           {hasChildren ? (
             <button
               onClick={() => toggleExpand(node.id)}
@@ -155,7 +182,6 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
             <span className="w-4 h-4" />
           )}
 
-          {/* 图标 + 名称 */}
           {editingId === node.id ? (
             <Input
               value={editName}
@@ -178,9 +204,17 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
             </Link>
           )}
 
-          {/* 操作按钮 */}
           {editingId !== node.id && (
             <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 shrink-0 transition-opacity">
+              <button
+                onClick={() => startCreateChild(node.id)}
+                className="w-5 h-5 flex items-center justify-center rounded text-stone-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                title="新建子项目"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
               <button
                 onClick={() => {
                   setEditingId(node.id);
@@ -206,7 +240,10 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
           )}
         </div>
 
-        {/* 子项目 */}
+        {/* 子项目创建输入框 */}
+        {renderCreateInput(node.id, depth + 1)}
+
+        {/* 子项目列表 */}
         {hasChildren && isExpanded && (
           <div>
             {node.children!.map((child) => renderNode(child, depth + 1))}
@@ -218,35 +255,22 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
 
   return (
     <div className="space-y-1">
-      {/* 项目列表 */}
       {projects.length > 0 ? (
         projects.map((p) => renderNode(p))
       ) : (
         <p className="text-xs text-muted-foreground px-2 py-1">暂无项目</p>
       )}
 
-      {/* 新建项目 */}
-      {creating ? (
-        <div className="px-2 py-1">
-          <Input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleCreate();
-              if (e.key === "Escape") { setCreating(false); setNewName(""); }
-            }}
-            onBlur={() => { handleCreate(); }}
-            placeholder="项目名称..."
-            className="h-7 text-xs px-2 py-0"
-            autoFocus
-          />
-        </div>
-      ) : (
+      {/* 根项目创建输入框 */}
+      {renderCreateInput(null, 0)}
+
+      {/* 新建根项目按钮 */}
+      {!creating && (
         <Button
           variant="ghost"
           size="sm"
           className="w-full justify-start text-xs text-muted-foreground h-7 px-2"
-          onClick={() => setCreating(true)}
+          onClick={() => { setCreating(true); setCreatingParentId(null); setNewName(""); }}
         >
           <svg className="h-3.5 w-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
