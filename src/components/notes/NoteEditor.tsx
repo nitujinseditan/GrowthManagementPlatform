@@ -10,8 +10,6 @@ import {
   MarkdownPreview,
   WritingStats,
 } from "@/components/markdown";
-import { useAutoSave } from "@/hooks/useAutoSave";
-import { useRelativeTime } from "@/hooks/useRelativeTime";
 import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
 import TableOfContents from "@/components/notes/TableOfContents";
 import SlashCommandMenu from "@/components/notes/SlashCommandMenu";
@@ -28,16 +26,11 @@ interface NoteEditorProps {
     tags: string[]
   ) => Promise<void>;
   saving: boolean;
-  /** 自动保存回调 — 仅已有笔记（noteId 存在）时启用 */
-  onAutoSave?: (
-    title: string,
-    content: string,
-    tags: string[],
-    commitMessage: string
-  ) => Promise<void>;
+  /** 脏状态变化回调 — 通知页面是否有未保存的更改 */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEditorProps) {
+export default function NoteEditor({ note, onSave, saving, onDirtyChange }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [commitMessage, setCommitMessage] = useState("");
@@ -70,19 +63,36 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
     };
   }, [zenMode]);
 
-  // 自动保存（仅当 onAutoSave 提供且 title 非空时启用）
-  const autoSave = onAutoSave
-    ? // eslint-disable-next-line react-hooks/rules-of-hooks
-      useAutoSave({
-        data: { title, content, tags },
-        onSave: async (cm) => {
-          await onAutoSave(title, content, tags, cm || "自动保存");
-        },
-        enabled: !!note && title.trim().length > 0,
-      })
-    : null;
+  // 脏状态追踪：比较当前内容与最后保存快照
+  const lastSavedSnapshot = useRef<{ title: string; content: string; tags: string[] } | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
-  const relativeTime = useRelativeTime(autoSave?.lastSavedAt ?? null);
+  const checkDirty = useCallback(
+    (currentTitle: string, currentContent: string, currentTags: string[]) => {
+      const snap = lastSavedSnapshot.current;
+      if (!snap) {
+        // 无快照时：有实质内容即视为 dirty
+        return currentTitle.trim().length > 0 || currentContent.trim().length > 0;
+      }
+      return (
+        currentTitle !== snap.title ||
+        currentContent !== snap.content ||
+        JSON.stringify(currentTags) !== JSON.stringify(snap.tags)
+      );
+    },
+    []
+  );
+
+  // 内容变化时更新脏状态
+  useEffect(() => {
+    const dirty = checkDirty(title, content, tags);
+    setIsDirty(dirty);
+  }, [title, content, tags, checkDirty]);
+
+  // 向页面报告脏状态变化
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   // 草稿恢复
   const draftKey = note ? `note:${note.id}` : "note:new";
@@ -108,9 +118,16 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
     if (note) {
       setTitle(note.title);
       setContent(note.currentVersion?.content || "");
-      setTags((note.tags || []).map((t) => t.name));
+      const loadedTags = (note.tags || []).map((t) => t.name);
+      setTags(loadedTags);
       setDescription(note.description || "");
       setIsPinned(note.isPinned || false);
+      // 初始化脏状态快照（加载完成后视为"已保存"状态）
+      lastSavedSnapshot.current = {
+        title: note.title,
+        content: note.currentVersion?.content || "",
+        tags: loadedTags,
+      };
     }
   }, [note]);
 
@@ -209,6 +226,8 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
     );
     setCommitMessage("");
     setSaved(true);
+    // 更新快照，将脏状态重置
+    lastSavedSnapshot.current = { title, content, tags: [...tags] };
     clearDraft(draftKey); // 保存成功后清除草稿
     setTimeout(() => setSaved(false), 2000);
   };
@@ -591,33 +610,6 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
           )}
         </Button>
       </div>
-
-      {/* 自动保存状态指示器 */}
-      {autoSave && (
-        <p className="text-xs flex items-center gap-1.5">
-          {autoSave.status === "saving" && (
-            <>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-amber-600">自动保存中...</span>
-            </>
-          )}
-          {autoSave.status === "saved" && (
-            <>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-emerald-600">已自动保存</span>
-              {relativeTime && (
-                <span className="text-stone-400">（{relativeTime}）</span>
-              )}
-            </>
-          )}
-          {autoSave.status === "error" && (
-            <>
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400" />
-              <span className="text-red-500">自动保存失败，请手动保存</span>
-            </>
-          )}
-        </p>
-      )}
 
       {/* 当前版本信息 */}
       {note?.currentVersion && (
