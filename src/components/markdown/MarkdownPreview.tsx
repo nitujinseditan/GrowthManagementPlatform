@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 
 interface MarkdownPreviewProps {
   content: string;
@@ -58,7 +59,7 @@ export default function MarkdownPreview({
 }: MarkdownPreviewProps) {
   const rendered = useMemo(
     () => (
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={components}>
         {content}
       </ReactMarkdown>
     ),

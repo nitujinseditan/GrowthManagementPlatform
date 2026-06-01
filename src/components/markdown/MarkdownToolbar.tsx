@@ -15,18 +15,31 @@ interface Tool {
 }
 
 const TOOLS: Tool[] = [
+  // 文本格式
   { label: "B", title: "加粗 (Ctrl+B)", before: "**", after: "**" },
   { label: "I", title: "斜体 (Ctrl+I)", before: "*", after: "*" },
   { label: "~~", title: "删除线", before: "~~", after: "~~" },
+  // 标题
   { label: "H2", title: "二级标题", before: "## ", after: "" },
   { label: "H3", title: "三级标题", before: "### ", after: "" },
+  // 列表
   { label: "•", title: "无序列表", before: "- ", after: "" },
   { label: "1.", title: "有序列表", before: "1. ", after: "" },
+  { label: "☑", title: "任务列表", before: "- [ ] ", after: "" },
+  // 块级
   { label: "<>", title: "行内代码", before: "`", after: "`" },
+  { label: "{ }", title: "代码块", before: "```\n", after: "\n```" },
   { label: "\"", title: "引用", before: "> ", after: "" },
+  { label: "⊞", title: "表格", before: "| 列1 | 列2 | 列3 |\n| --- | --- | --- |\n| | | |\n", after: "" },
+  // 媒体
   { label: "🔗", title: "链接 (Ctrl+K)", before: "[", after: "](url)" },
+  { label: "🖼", title: "插入图片", before: "![", after: "](https://)" },
+  // 分隔
   { label: "—", title: "分隔线", before: "\n---\n", after: "" },
 ];
+
+// 分隔符位置（按分组：文本格式3, 标题5, 列表8, 块级12, 媒体14）
+const SEPARATORS = new Set([3, 5, 8, 12, 14]);
 
 export default function MarkdownToolbar({ textareaRef }: MarkdownToolbarProps) {
   const insertText = useCallback(
@@ -68,12 +81,11 @@ export default function MarkdownToolbar({ textareaRef }: MarkdownToolbarProps) {
   return (
     <div className="flex items-center gap-0.5 flex-wrap p-1 border border-stone-200 rounded-lg bg-white sticky top-0 z-10">
       {TOOLS.map((tool, index) => (
-        <>
-          {index === 3 || index === 5 || index === 8 ? (
-            <span key={`sep-${index}`} className="w-px h-5 bg-stone-200 mx-1" />
-          ) : null}
+        <span key={tool.label} className="contents">
+          {SEPARATORS.has(index) && (
+            <span className="w-px h-5 bg-stone-200 mx-1" />
+          )}
           <button
-            key={tool.label}
             type="button"
             title={tool.title}
             onClick={() => insertText(tool.before, tool.after)}
@@ -83,7 +95,7 @@ export default function MarkdownToolbar({ textareaRef }: MarkdownToolbarProps) {
           >
             {tool.label}
           </button>
-        </>
+        </span>
       ))}
     </div>
   );

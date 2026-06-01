@@ -260,6 +260,93 @@ body {
   background: #a8a29e;
 }
 
+/* ===== 代码语法高亮 ===== */
+
+/* highlight.js 基础主题 — 适配 stone 暖灰 / emerald */
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0;
+  color: #d6d3d1;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #78716c;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-type {
+  color: #a855f7;
+}
+
+.hljs-string,
+.hljs-addition {
+  color: #10b981;
+}
+
+.hljs-number,
+.hljs-literal {
+  color: #f59e0b;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-name {
+  color: #3b82f6;
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+  color: #06b6d4;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #f97316;
+}
+
+.hljs-deletion,
+.hljs-regexp {
+  color: #ef4444;
+}
+
+.hljs-meta,
+.hljs-tag {
+  color: #a8a29e;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* 行内代码 */
+.prose :not(pre) > code {
+  background: #f5f5f4;
+  color: #ef4444;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-weight: 400;
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose :not(pre) > code {
+    background: #292524;
+    color: #f87171;
+  }
+}
+
 /* ===== 禅模式（全屏写作）===== */
 
 body.zen-mode .sidebar-desktop,

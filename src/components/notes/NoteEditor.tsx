@@ -16,6 +16,7 @@ import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
 import TableOfContents from "@/components/notes/TableOfContents";
 import SlashCommandMenu from "@/components/notes/SlashCommandMenu";
 import type { SlashCommand } from "@/components/notes/slashCommands";
+import { downloadMarkdown, exportPdf } from "@/lib/export";
 import type { Note } from "@/types";
 
 interface NoteEditorProps {
@@ -371,7 +372,31 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
       <div className="lg:grid lg:grid-cols-2 lg:gap-6">
         {/* 左栏：编辑区 */}
         <div className="flex flex-col space-y-3 min-w-0">
-          <MarkdownToolbar textareaRef={textareaRef} />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 overflow-x-auto">
+              <MarkdownToolbar textareaRef={textareaRef} />
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => downloadMarkdown(title || "未命名", content)}
+                title="导出 Markdown"
+                className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1 rounded-lg
+                         hover:bg-stone-100 transition-colors"
+              >
+                .md
+              </button>
+              <button
+                type="button"
+                onClick={exportPdf}
+                title="导出 PDF"
+                className="text-xs text-stone-400 hover:text-stone-600 px-2 py-1 rounded-lg
+                         hover:bg-stone-100 transition-colors"
+              >
+                PDF
+              </button>
+            </div>
+          </div>
           <div className="relative flex-1 min-h-0">
             <Textarea
               ref={textareaRef}
