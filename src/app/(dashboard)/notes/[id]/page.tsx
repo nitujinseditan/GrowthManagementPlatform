@@ -68,6 +68,26 @@ export default function NoteDetailPage() {
     loadNote();
   };
 
+  // 自动保存：静默保存，不触发 saving 状态（避免按钮闪烁）
+  const handleAutoSave = async (
+    title: string,
+    content: string,
+    tags: string[],
+    commitMessage: string
+  ) => {
+    await fetch(`/api/notes/${noteId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, tags }),
+    });
+    await fetch(`/api/notes/${noteId}/versions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, commitMessage }),
+    });
+    loadNote();
+  };
+
   const handleCompare = (versionIdA: number, versionIdB: number) => {
     setDiffA(versionIdA);
     setDiffB(versionIdB);
@@ -190,7 +210,7 @@ export default function NoteDetailPage() {
       {/* Tab 内容 */}
       {tab === "edit" && (
         <Card className="p-6">
-          <NoteEditor note={note} onSave={handleSave} saving={saving} />
+          <NoteEditor note={note} onSave={handleSave} saving={saving} onAutoSave={handleAutoSave} />
         </Card>
       )}
 

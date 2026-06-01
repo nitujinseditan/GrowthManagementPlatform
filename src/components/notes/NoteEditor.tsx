@@ -10,6 +10,8 @@ import {
   MarkdownPreview,
   WritingStats,
 } from "@/components/markdown";
+import { useAutoSave } from "@/hooks/useAutoSave";
+import { useRelativeTime } from "@/hooks/useRelativeTime";
 import type { Note } from "@/types";
 
 interface NoteEditorProps {
@@ -21,9 +23,16 @@ interface NoteEditorProps {
     tags: string[]
   ) => Promise<void>;
   saving: boolean;
+  /** 自动保存回调 — 仅已有笔记（noteId 存在）时启用 */
+  onAutoSave?: (
+    title: string,
+    content: string,
+    tags: string[],
+    commitMessage: string
+  ) => Promise<void>;
 }
 
-export default function NoteEditor({ note, onSave, saving }: NoteEditorProps) {
+export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEditorProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [commitMessage, setCommitMessage] = useState("");
@@ -32,6 +41,20 @@ export default function NoteEditor({ note, onSave, saving }: NoteEditorProps) {
   const [saved, setSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 自动保存（仅当 onAutoSave 提供且 title 非空时启用）
+  const autoSave = onAutoSave
+    ? // eslint-disable-next-line react-hooks/rules-of-hooks
+      useAutoSave({
+        data: { title, content, tags },
+        onSave: async (cm) => {
+          await onAutoSave(title, content, tags, cm || "自动保存");
+        },
+        enabled: !!note && title.trim().length > 0,
+      })
+    : null;
+
+  const relativeTime = useRelativeTime(autoSave?.lastSavedAt ?? null);
 
   // 加载已有笔记数据
   useEffect(() => {
@@ -303,6 +326,33 @@ export default function NoteEditor({ note, onSave, saving }: NoteEditorProps) {
           )}
         </Button>
       </div>
+
+      {/* 自动保存状态指示器 */}
+      {autoSave && (
+        <p className="text-xs flex items-center gap-1.5">
+          {autoSave.status === "saving" && (
+            <>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-amber-600">自动保存中...</span>
+            </>
+          )}
+          {autoSave.status === "saved" && (
+            <>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-emerald-600">已自动保存</span>
+              {relativeTime && (
+                <span className="text-stone-400">（{relativeTime}）</span>
+              )}
+            </>
+          )}
+          {autoSave.status === "error" && (
+            <>
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400" />
+              <span className="text-red-500">自动保存失败，请手动保存</span>
+            </>
+          )}
+        </p>
+      )}
 
       {/* 当前版本信息 */}
       {note?.currentVersion && (
