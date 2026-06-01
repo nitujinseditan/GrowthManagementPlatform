@@ -84,11 +84,21 @@ const CREATE_TABLES = `
   );
 `;
 
-// 迁移：为已有 users 表新增 email_verified 列（忽略"已存在"错误）
+// 迁移 V1：为已有 users 表新增 email_verified 列（忽略"已存在"错误）
 // 已有用户自动标记为已验证（NULL → 当前时间戳）
 const MIGRATIONS = `
   ALTER TABLE users ADD COLUMN email_verified INTEGER;
   UPDATE users SET email_verified = unixepoch() WHERE email_verified IS NULL;
+`;
+
+// 迁移 V2：阶段二 — 笔记表新增 6 个字段
+const MIGRATIONS_V2 = `
+  ALTER TABLE notes ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE notes ADD COLUMN deleted_at INTEGER;
+  ALTER TABLE notes ADD COLUMN description TEXT NOT NULL DEFAULT '';
+  ALTER TABLE notes ADD COLUMN cover_image_url TEXT;
+  ALTER TABLE notes ADD COLUMN icon TEXT;
+  ALTER TABLE notes ADD COLUMN last_saved_at INTEGER;
 `;
 
 async function initDatabase(): Promise<void> {
@@ -115,6 +125,12 @@ async function initDatabase(): Promise<void> {
     _sqlDb.exec(MIGRATIONS);
   } catch {
     // ALTER TABLE ADD COLUMN 在列已存在时抛错，可安全忽略
+  }
+
+  try {
+    _sqlDb.exec(MIGRATIONS_V2);
+  } catch {
+    // V2 列已存在，安全忽略
   }
 
   _db = drizzle(_sqlDb, { schema });

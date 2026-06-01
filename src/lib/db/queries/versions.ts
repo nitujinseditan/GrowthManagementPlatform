@@ -71,6 +71,12 @@ export async function saveVersion(
     .where(eq(notes.id, noteId))
     .run();
 
+  // 更新笔记的最近保存时间
+  db.update(notes)
+    .set({ lastSavedAt: new Date(), updatedAt: new Date() })
+    .where(eq(notes.id, noteId))
+    .run();
+
   saveToDisk();
 
   return result;

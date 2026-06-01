@@ -43,6 +43,8 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
   const [commitMessage, setCommitMessage] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPinned, setIsPinned] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [zenMode, setZenMode] = useState(false);
@@ -107,6 +109,8 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
       setTitle(note.title);
       setContent(note.currentVersion?.content || "");
       setTags((note.tags || []).map((t) => t.name));
+      setDescription(note.description || "");
+      setIsPinned(note.isPinned || false);
     }
   }, [note]);
 
@@ -308,13 +312,60 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
         </div>
       )}
 
-      {/* 标题 */}
-      <Input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="笔记标题..."
-        className="text-xl font-semibold border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent"
-      />
+      {/* 标题 + 置顶按钮 */}
+      <div className="flex items-center gap-2">
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="笔记标题..."
+          className="text-xl font-semibold border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent flex-1"
+        />
+        {note && (
+          <button
+            type="button"
+            onClick={async () => {
+              const newPinned = !isPinned;
+              setIsPinned(newPinned);
+              try {
+                await fetch(`/api/notes/${note.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ isPinned: newPinned }),
+                });
+              } catch { setIsPinned(!newPinned); }
+            }}
+            title={isPinned ? "取消置顶" : "置顶"}
+            className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-sm
+                       transition-colors
+                       ${isPinned
+                         ? "bg-emerald-50 text-emerald-600"
+                         : "text-stone-300 hover:text-amber-500 hover:bg-stone-50"}`}
+          >
+            📌
+          </button>
+        )}
+      </div>
+
+      {/* 描述 */}
+      {note && (
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={async () => {
+            if (description !== (note.description || "")) {
+              try {
+                await fetch(`/api/notes/${note.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ description }),
+                });
+              } catch { /* 静默 */ }
+            }
+          }}
+          placeholder="添加简短描述..."
+          className="text-sm text-stone-400 border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent"
+        />
+      )}
 
       {/* 移动端预览切换按钮 + 禅模式按钮 */}
       <div className="flex items-center gap-2">

@@ -13,6 +13,12 @@ export interface Note {
   title: string;
   currentVersionId: number | null;
   isPublic: boolean;
+  isPinned: boolean;
+  deletedAt: Date | null;
+  description: string;
+  coverImageUrl: string | null;
+  icon: string | null;
+  lastSavedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   tags?: Tag[];
@@ -98,6 +104,11 @@ export interface CreateNoteInput {
 export interface UpdateNoteInput {
   title?: string;
   isPublic?: boolean;
+  isPinned?: boolean;
+  description?: string;
+  coverImageUrl?: string;
+  icon?: string;
+  tags?: string[];
 }
 
 export interface SaveVersionInput {

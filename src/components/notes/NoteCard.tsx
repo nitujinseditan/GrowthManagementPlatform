@@ -9,11 +9,18 @@ export default function NoteCard({ note }: { note: Note }) {
   return (
     <Link href={`/notes/${note.id}`}>
       <Card hover className="p-5 h-full flex flex-col justify-between gap-3">
-        {/* 顶部：标题 + 公开标记 */}
+        {/* 顶部：标题 + 标记 */}
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-semibold text-stone-900 leading-snug line-clamp-2">
-            {note.title || "无标题"}
-          </h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-stone-900 leading-snug line-clamp-2 flex items-center gap-1">
+              {note.icon && <span className="shrink-0">{note.icon}</span>}
+              {note.isPinned && <span className="shrink-0 text-xs">📌</span>}
+              <span className="truncate">{note.title || "无标题"}</span>
+            </h3>
+            {note.description && (
+              <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{note.description}</p>
+            )}
+          </div>
           {note.isPublic && (
             <span className="shrink-0 text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-medium">
               公开

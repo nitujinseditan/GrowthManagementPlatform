@@ -21,6 +21,13 @@ export const notes = sqliteTable("notes", {
   title: text("title").notNull(),
   currentVersionId: integer("current_version_id"), // 当前最新版本
   isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
+  // 阶段二新增字段
+  isPinned: integer("is_pinned", { mode: "boolean" }).notNull().default(false),
+  deletedAt: integer("deleted_at", { mode: "timestamp" }), // null=正常, 有值=回收站
+  description: text("description").notNull().default(""),
+  coverImageUrl: text("cover_image_url"),
+  icon: text("icon"),
+  lastSavedAt: integer("last_saved_at", { mode: "timestamp" }),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

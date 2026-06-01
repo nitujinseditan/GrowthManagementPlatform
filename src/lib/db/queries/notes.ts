@@ -1,6 +1,6 @@
 import { initDb, saveToDisk } from "../init";
 import { notes, noteVersions, noteTags, tags } from "../schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull, isNotNull } from "drizzle-orm";
 import { getOrCreateTags } from "./tags";
 import type { Note, NoteVersion } from "@/types";
 
@@ -30,25 +30,52 @@ async function _getVersionById(versionId: number): Promise<NoteVersion | null> {
 }
 
 // 获取用户的所有笔记
-export async function getNotesByUser(userId: number): Promise<Note[]> {
+export async function getNotesByUser(
+  userId: number,
+  opts?: { includeDeleted?: boolean }
+): Promise<Note[]> {
   const db = await getDb();
+  const where = opts?.includeDeleted
+    ? eq(notes.userId, userId)
+    : and(eq(notes.userId, userId), isNull(notes.deletedAt));
   const rows = db
     .select()
     .from(notes)
-    .where(eq(notes.userId, userId))
-    .orderBy(desc(notes.updatedAt))
+    .where(where)
+    .orderBy(desc(notes.isPinned), desc(notes.updatedAt))
     .all();
 
   const result: Note[] = [];
   for (const row of rows) {
-    const noteTags = await _getTagsForNote(row.id);
+    const noteTagsList = await _getTagsForNote(row.id);
     const currentVersion = row.currentVersionId
       ? await _getVersionById(row.currentVersionId)
       : null;
     result.push({
       ...row,
-      tags: noteTags,
+      tags: noteTagsList,
       currentVersion: currentVersion || undefined,
+    });
+  }
+  return result;
+}
+
+// 获取回收站笔记
+export async function getTrashNotes(userId: number): Promise<Note[]> {
+  const db = await getDb();
+  const rows = db
+    .select()
+    .from(notes)
+    .where(and(eq(notes.userId, userId), isNotNull(notes.deletedAt)))
+    .orderBy(desc(notes.deletedAt))
+    .all();
+
+  const result: Note[] = [];
+  for (const row of rows) {
+    const noteTagsList = await _getTagsForNote(row.id);
+    result.push({
+      ...row,
+      tags: noteTagsList,
     });
   }
   return result;
@@ -136,7 +163,14 @@ export async function createNote(
 export async function updateNote(
   noteId: number,
   userId: number,
-  data: { title?: string; isPublic?: boolean }
+  data: {
+    title?: string;
+    isPublic?: boolean;
+    isPinned?: boolean;
+    description?: string;
+    coverImageUrl?: string;
+    icon?: string;
+  }
 ): Promise<Note | null> {
   const db = await getDb();
   const note = await getNoteById(noteId, userId);
@@ -147,6 +181,10 @@ export async function updateNote(
   };
   if (data.title !== undefined) updateData.title = data.title;
   if (data.isPublic !== undefined) updateData.isPublic = data.isPublic;
+  if (data.isPinned !== undefined) updateData.isPinned = data.isPinned;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.coverImageUrl !== undefined) updateData.coverImageUrl = data.coverImageUrl;
+  if (data.icon !== undefined) updateData.icon = data.icon;
 
   db.update(notes)
     .set(updateData)
@@ -158,7 +196,35 @@ export async function updateNote(
   return getNoteById(noteId, userId);
 }
 
-// 删除笔记
+// 软删除笔记（移入回收站）
+export async function softDeleteNote(
+  noteId: number,
+  userId: number
+): Promise<boolean> {
+  const db = await getDb();
+  db.update(notes)
+    .set({ deletedAt: new Date() })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .run();
+  saveToDisk();
+  return true;
+}
+
+// 恢复笔记（从回收站）
+export async function restoreNote(
+  noteId: number,
+  userId: number
+): Promise<boolean> {
+  const db = await getDb();
+  db.update(notes)
+    .set({ deletedAt: null })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .run();
+  saveToDisk();
+  return true;
+}
+
+// 永久删除笔记
 export async function deleteNote(
   noteId: number,
   userId: number
@@ -169,6 +235,16 @@ export async function deleteNote(
     .run();
   saveToDisk();
   return true;
+}
+
+// 更新最近保存时间
+export async function updateLastSavedAt(noteId: number): Promise<void> {
+  const db = await getDb();
+  db.update(notes)
+    .set({ lastSavedAt: new Date() })
+    .where(eq(notes.id, noteId))
+    .run();
+  saveToDisk();
 }
 
 // 为笔记设置标签（先删后插）

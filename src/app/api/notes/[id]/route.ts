@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/session";
-import { getNoteById, updateNote, deleteNote, setNoteTags } from "@/lib/db/queries/notes";
+import { getNoteById, updateNote, softDeleteNote, restoreNote, setNoteTags } from "@/lib/db/queries/notes";
 
 const updateSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   isPublic: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
+  description: z.string().max(500).optional(),
+  coverImageUrl: z.string().max(500).optional(),
+  icon: z.string().max(10).optional(),
   tags: z.array(z.string()).optional(),
 });
 
@@ -75,7 +79,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/notes/[id] — 删除笔记
+// DELETE /api/notes/[id] — 软删除笔记（移入回收站）
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -83,7 +87,7 @@ export async function DELETE(
   try {
     const userId = await requireAuth();
     const noteId = parseInt(params.id, 10);
-    const deleted = await deleteNote(noteId, userId);
+    const deleted = await softDeleteNote(noteId, userId);
 
     if (!deleted) {
       return NextResponse.json({ error: "笔记不存在" }, { status: 404 });
@@ -95,5 +99,32 @@ export async function DELETE(
       return NextResponse.json({ error: "请先登录" }, { status: 401 });
     }
     return NextResponse.json({ error: "删除笔记失败" }, { status: 500 });
+  }
+}
+
+// PUT /api/notes/[id]/restore — 从回收站恢复
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const userId = await requireAuth();
+    const noteId = parseInt(params.id, 10);
+
+    // 检查是否是恢复操作
+    const { searchParams } = new URL(req.url);
+    const action = searchParams.get("action");
+
+    if (action === "restore") {
+      await restoreNote(noteId, userId);
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "未知操作" }, { status: 400 });
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message === "请先登录") {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "操作失败" }, { status: 500 });
   }
 }
