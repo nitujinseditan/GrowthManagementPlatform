@@ -3,39 +3,97 @@
 @tailwind utilities;
 
 :root {
-  /* 暖灰基调（stone色系） */
-  --bg-primary: #fafaf9;       /* stone-50 */
-  --bg-card: #ffffff;
-  --border: #e7e5e4;            /* stone-200 */
-  --text-primary: #1c1917;      /* stone-900 */
-  --text-secondary: #78716c;    /* stone-500 */
-  --accent: #10b981;            /* emerald-500 */
-  --accent-soft: #d1fae5;       /* emerald-100 */
-  --accent-glow: rgba(16, 185, 129, 0.15);
-  --danger: #ef4444;
-  --danger-soft: #fee2e2;
+  /* ═══════════════════════════════════════════
+     设计令牌 v2 — shadcn/ui 兼容 HSL 格式
+     ═══════════════════════════════════════════ */
 
-  /* 阴影层级 */
+  /* 背景/前景 */
+  --background: 60 9% 98%;             /* stone-50 #fafaf9 */
+  --foreground: 24 10% 10%;            /* stone-900 #1c1917 */
+  --card: 0 0% 100%;                   /* white */
+  --card-foreground: 24 10% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 24 10% 10%;
+
+  /* 主色 — emerald */
+  --primary: 160 84% 39%;              /* emerald-500 #10b981 */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 60 5% 96%;              /* stone-100 #f5f5f4 */
+  --secondary-foreground: 24 10% 10%;
+  --muted: 60 5% 96%;                  /* stone-100 */
+  --muted-foreground: 30 6% 45%;       /* stone-500 #78716c */
+  --accent: 152 81% 90%;               /* emerald-100 #d1fae5 */
+  --accent-foreground: 163 88% 20%;    /* emerald-800 #065f46 */
+  --destructive: 0 84% 60%;            /* red-500 #ef4444 */
+  --destructive-foreground: 0 0% 100%;
+
+  /* 边框/输入 */
+  --border: 20 6% 90%;                 /* stone-200 #e7e5e4 */
+  --input: 20 6% 90%;
+  --ring: 160 84% 39%;                 /* emerald-500 */
+
+  /* 圆角 */
+  --radius: 0.5rem;                    /* 8px */
+
+  /* 阴影 */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
   --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.10);
+
+  /* ═══════════════════════════════════════════
+     旧版别名（hex — 兼容 globals.css 内部引用）
+     ═══════════════════════════════════════════ */
+  --bg-primary: #fafaf9;
+  --bg-card: #ffffff;
+  --text-primary: #1c1917;
+  --text-secondary: #78716c;
+  --accent-hex: #10b981;
+  --accent-soft: #d1fae5;
+  --accent-glow: rgba(16, 185, 129, 0.15);
+  --danger: #ef4444;
+  --danger-soft: #fee2e2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #1c1917;
-    --bg-card: #292524;
-    --border: #44403c;
-    --text-primary: #fafaf9;
-    --text-secondary: #a8a29e;
-    --accent: #34d399;
-    --accent-soft: #064e3b;
-    --accent-glow: rgba(52, 211, 153, 0.2);
+    /* shadcn HSL tokens — 暗色模式 */
+    --background: 24 10% 10%;            /* stone-900 #1c1917 */
+    --foreground: 60 9% 98%;             /* stone-50 #fafaf9 */
+    --card: 24 6% 15%;                   /* stone-800 #292524 */
+    --card-foreground: 60 9% 98%;
+    --popover: 24 6% 15%;
+    --popover-foreground: 60 9% 98%;
+    --primary: 158 64% 52%;              /* emerald-400 #34d399 */
+    --primary-foreground: 24 10% 10%;
+    --secondary: 30 6% 25%;              /* stone-700 #44403c */
+    --secondary-foreground: 60 9% 98%;
+    --muted: 30 6% 25%;
+    --muted-foreground: 34 5% 65%;       /* stone-400 #a8a29e */
+    --accent: 165 86% 18%;               /* emerald-900 #064e3b */
+    --accent-foreground: 60 9% 98%;
+    --destructive: 0 63% 31%;            /* red-900 */
+    --destructive-foreground: 60 9% 98%;
+    --border: 30 6% 25%;                 /* stone-700 */
+    --input: 30 6% 25%;
+    --ring: 158 64% 52%;
+
+    /* 阴影 — 暗色更深 */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.4);
     --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.5);
+
+    /* 旧版别名（hex） */
+    --bg-primary: #1c1917;
+    --bg-card: #292524;
+    --text-primary: #fafaf9;
+    --text-secondary: #a8a29e;
+    --accent-hex: #34d399;
+    --accent-soft: #064e3b;
+    --accent-glow: rgba(52, 211, 153, 0.2);
+    --danger: #f87171;
+    --danger-soft: #450a0a;
   }
 }
 
@@ -194,8 +252,8 @@ body {
 }
 .focus-glow:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsla(var(--primary) / 0.15);
 }
 
 /* 卡片悬浮上浮 */
