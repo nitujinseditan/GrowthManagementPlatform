@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（Phase 1-7 全部完成：前端 UI/UX 全面升级至 Notion 级别）
+> 最后更新：2026-06-01（Phase 1-7 完成 + 审计修复 + 组件统一化）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -53,7 +53,7 @@ whatisthat/
 │   │   └── markdown/     # MarkdownToolbar, MarkdownPreview, WritingStats
 │   ├── hooks/            # useAutoSave, useDraftRecovery, useRelativeTime
 │   └── lib/
-│       ├── db/           # schema.ts, init.ts (sql.js), queries/{notes,versions,tags,posts,comments}.ts
+│       ├── db/           # schema.ts, init.ts (sql.js), queries/{notes,versions,tags,posts,comments,projects}.ts
 │       ├── auth/         # NextAuth 配置, session.ts, utils.ts
 │       ├── ai/           # DeepSeek client.ts, conversation.ts
 │       ├── email/        # send.ts (nodemailer + Gmail SMTP)
@@ -75,7 +75,7 @@ whatisthat/
 | 表 | 核心字段 | 说明 |
 |----|---------|------|
 | users | id, email, name, password_hash, **email_verified** | bcrypt 12轮，email_verified NULL=未验证 |
-| notes | id, user_id, title, current_version_id, is_public, **is_pinned**, **deleted_at**, **description**, **cover_image_url**, **icon**, **last_saved_at** | 🆕 6 个阶段二新字段 |
+| notes | id, user_id, title, current_version_id, is_public, is_pinned, deleted_at, description, cover_image_url, icon, last_saved_at, **project_id** | 支持项目归属 |
 | note_versions | id, note_id, user_id, version_number, content, **content_html**, commit_message | 不可变历史，双格式存储 |
 | tags | id, name (UNIQUE) | |
 | note_tags | note_id, tag_id (复合主键) | 多对多 |
@@ -95,7 +95,7 @@ whatisthat/
 | GET/POST | /api/auth/[...nextauth] | 否 | NextAuth |
 | POST | /api/auth/register | 否 | 注册 → 发验证邮件 |
 | **GET** 🆕 | **/api/auth/verify?token=** | 否 | **邮箱验证** |
-| GET/POST | /api/notes | 是 | |
+| GET/POST | /api/notes | 是 | POST 支持 projectId 关联项目 |
 | GET/PATCH/**PUT**/DELETE | /api/notes/[id] | 是 | PATCH 支持 tags/pin/description/icon；**PUT ?action=restore 恢复**；DELETE 软删除 |
 | GET/POST | /api/notes/[id]/versions | 是 | |
 | GET | /api/notes/[id]/versions/[vid] | 是 | |
@@ -122,7 +122,7 @@ whatisthat/
 | /login | 登录 | 否 |
 | /register | 注册（成功后提示查收验证邮件） | 否 |
 | /notes | 笔记列表 + 标签筛选 | 是 |
-| /notes/new | 新建笔记 | 是 |
+| /notes/new | 新建笔记（支持 ?project= 关联项目） | 是 |
 | /notes/[id] | 笔记详情（编辑/版本/AI Tab 切换） | 是 |
 | /community | 帖子列表 + **搜索栏** | 否 |
 | /community/[id] | 帖子详情 + 评论 | 否 |
@@ -211,6 +211,18 @@ whatisthat/
 | PATCH 标签 500 | Drizzle sql.js `delete().run()` 复合主键表偶发不生效 | 已验证，实际为 curl 中文编码问题（浏览器正常） |
 | 测试脏数据残留 | sql.js `Buffer.from(Uint8Array)` 损坏数据 + 服务内存缓存 | 逐字节复制写盘 + 重启服务 |
 | 测试删库导致用户数据丢失 🆕 | `rm -f` 删除整个 DB 文件 | 改为 SQL DELETE 精确删除 + 先 cp 备份 |
+| 新建项目无反应 | V3 迁移 exec() 批量 SQL 一条失败全停 | 改为逐条 exec() + 独立 try-catch |
+| QQ邮箱验证链接 404 | QQ邮箱安全机制拦截 localhost URL | 邮件模板改为纯文本链接 + 复制粘贴指引 |
+| 项目内新建笔记不关联项目 | notes/new→API→createNote 三层断裂 | 全链路传递 projectId |
+| 无法创建子项目 | ProjectTree 无子项目入口 | 每节点添加 + 按钮，handleCreate 支持 parentId |
+| 标签 Badge 无颜色 | NoteEditor variant="default" 但 LegacyBadge 不支持 | 改为 variant="primary" |
+| NovelEditor 无样式 | .novel-editor CSS 类未定义 | globals.css 添加完整 ProseMirror 排版样式 |
+| 笔记详情手动 Tab | 未使用 shadcn Tabs | 替换为 Tabs/TabsList/TabsTrigger/TabsContent |
+| DiffView 用 gray 色 | 硬编码 text-gray-500/bg-gray-50 | 改为设计令牌 |
+| 登录/注册页 raw div | 未使用 shadcn Card | 替换为 Card + 设计令牌 |
+| 首页绕过组件系统 | raw Link 代替 Button | 替换为 Button + 设计令牌 |
+| 社区页 raw 元素 | 分页/返回用 raw button | 替换为 Button 组件 |
+| SVG 上传 XSS 风险 | 允许 image/svg+xml | 移除 SVG + 扩展名从 MIME 推导 |
 
 ---
 
@@ -222,7 +234,7 @@ whatisthat/
 | Phase 2 | shadcn/ui 组件标准化 — Button/Card/Input/Textarea/Badge 替换 + Modal/DropdownMenu/Toggle 删除 + avatar/progress/scroll-area/toggle 安装 | ✅ 完成 |
 | Phase 3 | 布局重构 — Sidebar shadcn 化（Button/Avatar/ScrollArea）+ 移动端 safe-area + 内容区入场动画 | ✅ 完成 |
 | Phase 4 | Novel 编辑器集成 — Tiptap 富文本 + 双格式存储（Markdown+HTML）+ 图片上传 API + turndown 转换 | ✅ 完成 |
-| Phase 5 | 项目树管理 — projects 表（自引用无限层级）+ CRUD API + ProjectTree 组件（递归渲染/展开折叠/重命名/删除）+ 侧边栏集成 + 笔记列表 projectId 筛选 | ✅ 完成 |
+| Phase 5 | 项目树管理 — projects 表 + CRUD API + ProjectTree（递归/展开折叠/重命名/删除/**子项目创建**）+ 侧边栏集成 + 笔记列表 projectId 筛选 + **笔记→项目关联全链路** | ✅ 完成 |
 | Phase 6 | 目录索引 — TableOfContents 支持 HTML 解析 + Novel 编辑器右侧目录面板 | ✅ 完成 |
 | Phase 7 | 动画与细节 — 页面入场 fade-in-up + 按钮 active:scale + 卡片 hover 上浮 + 输入框柔光晕 + stagger 列表动画 + prefers-reduced-motion | ✅ 完成 |
 
