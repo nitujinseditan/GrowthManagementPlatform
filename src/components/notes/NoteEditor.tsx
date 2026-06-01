@@ -14,6 +14,8 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { useRelativeTime } from "@/hooks/useRelativeTime";
 import { useDraftRecovery, clearDraft } from "@/hooks/useDraftRecovery";
 import TableOfContents from "@/components/notes/TableOfContents";
+import SlashCommandMenu from "@/components/notes/SlashCommandMenu";
+import type { SlashCommand } from "@/components/notes/slashCommands";
 import type { Note } from "@/types";
 
 interface NoteEditorProps {
@@ -47,6 +49,11 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
   zenModeRef.current = zenMode;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
+
+  // 斜杠命令状态
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashQuery, setSlashQuery] = useState("");
+  const slashStartRef = useRef<number>(-1); // / 的位置
 
   // 禅模式：切换 body class
   useEffect(() => {
@@ -127,6 +134,63 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
       e.preventDefault();
       addTag(tagInput);
     }
+  };
+
+  // 斜杠命令检测
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    setContent(newValue);
+
+    // 检测是否在行首或空格后输入了 /
+    const textBeforeCursor = newValue.slice(0, cursorPos);
+    const slashMatch = textBeforeCursor.match(/(?:^|[\s\n])(\/)([^\s\n]*)$/);
+
+    if (slashMatch) {
+      const slashPos = cursorPos - slashMatch[2].length - 1;
+      slashStartRef.current = slashPos;
+      setSlashQuery(slashMatch[2]);
+      setSlashOpen(true);
+    } else {
+      setSlashOpen(false);
+      slashStartRef.current = -1;
+    }
+  };
+
+  // 斜杠命令选择
+  const handleSlashSelect = (cmd: SlashCommand) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = slashStartRef.current;
+    if (start < 0) return;
+
+    const cursorPos = textarea.selectionStart;
+    const before = content.slice(0, start);
+    const after = content.slice(cursorPos);
+
+    const newText = before + cmd.before + cmd.after + after;
+    setContent(newText);
+
+    // 计算光标位置
+    const cursorTarget = start + cmd.before.length;
+
+    // 使用 setTimeout 确保 React 更新后再设置光标
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(cursorTarget, cursorTarget);
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    }, 0);
+
+    setSlashOpen(false);
+    setSlashQuery("");
+    slashStartRef.current = -1;
+  };
+
+  const handleSlashClose = () => {
+    setSlashOpen(false);
+    setSlashQuery("");
+    slashStartRef.current = -1;
   };
 
   // 保存
@@ -308,13 +372,21 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
         {/* 左栏：编辑区 */}
         <div className="flex flex-col space-y-3 min-w-0">
           <MarkdownToolbar textareaRef={textareaRef} />
-          <Textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="开始用 Markdown 记录你的想法...&#10;&#10;## 二级标题&#10;**加粗** *斜体* &#10;- 列表项&#10;> 引用&#10;`行内代码`"
-            className="flex-1 min-h-[420px] resize-none font-mono text-sm leading-relaxed"
-          />
+          <div className="relative flex-1 min-h-0">
+            <Textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              placeholder="开始用 Markdown 记录你的想法...&#10;&#10;输入 / 打开命令菜单&#10;## 二级标题&#10;**加粗** *斜体*&#10;- 列表项&#10;> 引用&#10;`行内代码`"
+              className="flex-1 min-h-[420px] resize-none font-mono text-sm leading-relaxed w-full"
+            />
+            <SlashCommandMenu
+              open={slashOpen}
+              query={slashQuery}
+              onSelect={handleSlashSelect}
+              onClose={handleSlashClose}
+            />
+          </div>
           <WritingStats content={content} />
         </div>
 
