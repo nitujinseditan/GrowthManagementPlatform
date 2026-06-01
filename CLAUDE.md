@@ -6,7 +6,7 @@
 ## 技术栈（简化版，小范围测试用）
 - **框架**: Next.js 14 (App Router) — 前后端一体，API Routes 替代独立后端
 - **UI**: React 18 + Tailwind CSS + @tailwindcss/typography
-- **Markdown**: react-markdown + remark-gfm（编辑器双栏预览 + 社区内容渲染）
+- **Markdown**: react-markdown + remark-gfm + rehype-highlight（编辑器双栏预览 + 社区渲染 + 代码语法高亮）
 - **认证**: NextAuth.js v5 (Credentials Provider, JWT 策略)
 - **数据库**: SQLite (sql.js WASM 版) + Drizzle ORM — 零配置单文件，无需 Docker
 - **AI**: DeepSeek API 直调 (deepseek-v4-flash 日常 / deepseek-v4-pro 深度报告)，不做 RAG
@@ -25,17 +25,19 @@ whatisthat/
 │   │   ├── page.tsx                  # 首页
 │   │   └── globals.css               # 全局样式
 │   ├── components/
-│   │   ├── ui/                       # 基础组件 (Button, Card, Input, Modal...)
-│   │   ├── layout/                   # 布局组件 (Sidebar, AuthGuard)
-│   │   ├── notes/                    # 笔记组件 (Editor, VersionHistory, DiffView)
-│   │   ├── community/                # 社区组件 (PostCard, CommentSection)
+│   │   ├── ui/                       # 基础组件 (Button, Card, Input, Modal, Tooltip, DropdownMenu, Toast, Toggle, QuickSwitcher)
+│   │   ├── layout/                   # 布局组件 (Sidebar, AuthGuard, DashboardShell)
+│   │   ├── notes/                    # 笔记组件 (Editor, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu)
+│   │   ├── community/                # 社区组件 (PostCard, CommentSection, PublishDialog)
 │   │   ├── ai/                       # AI 组件 (ChatPanel)
 │   │   └── markdown/                 # Markdown 组件 (Toolbar, Preview, WritingStats)
+│   ├── hooks/                        # 自定义 hooks (useAutoSave, useDraftRecovery, useRelativeTime)
 │   └── lib/
 │       ├── db/                       # 数据库 schema + 查询函数
 │       ├── auth/                     # NextAuth 配置
 │       ├── ai/                       # DeepSeek client + 对话编排
-│       └── version/                  # diff 计算
+│       ├── version/                  # diff 计算
+│       └── export.ts                 # Markdown/PDF 导出
 ├── data/                             # SQLite 数据库文件 (不提交 git)
 ├── package.json
 ├── tailwind.config.ts
@@ -50,6 +52,23 @@ users, notes, note_versions, tags, note_tags, posts, comments, ai_conversations,
 - 历史不可变：回退 = 创建新版本，内容复制自旧版本
 - 版本对比：用 diff 库计算行级差异
 - 提交信息：每次保存可附加 commit_message
+- **自动保存**：停笔 2 秒自动创建版本，commitMessage="自动保存"，与手动保存区分
+- **软删除**：DELETE 操作设 deleted_at 时间戳而非真删，可恢复
+
+## 编辑器功能（专业化升级）
+- **快捷键**：Ctrl+S 保存、Ctrl+P 快速切换、Ctrl+B/I/K 格式化、F11 禅模式、`/` 斜杠命令
+- **自动保存**：2 秒防抖，状态栏实时指示，创建版本标记"自动保存"
+- **草稿恢复**：localStorage 1 秒防抖写入，恢复/丢弃提示
+- **禅模式**：body.zen-mode CSS 全局隐藏侧边栏/顶栏/底栏
+- **目录导航**：解析 Markdown 标题 → 层级 TOC → IntersectionObserver 高亮
+- **斜杠命令**：16 条命令 5 分组（标题/格式/列表/块/媒体）
+- **快速切换器**：Ctrl+P 全局搜索笔记+标签，模糊匹配
+- **导出**：.md Blob 下载 / window.print() PDF + print CSS
+- **代码高亮**：rehype-highlight + 自定义 .hljs-* CSS 主题
+
+## 数据库迁移
+- V1：`users.email_verified` — 邮箱验证
+- V2：`notes` 表新增 6 列 — `is_pinned`, `deleted_at`, `description`, `cover_image_url`, `icon`, `last_saved_at`
 
 ## 开发约定
 - 使用 pnpm 作为包管理器

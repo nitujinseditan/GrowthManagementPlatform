@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（UI 全面优化 + Markdown 编辑器增强）
+> 最后更新：2026-06-01（编辑器专业化升级：13 项新功能 + Schema 扩展）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -26,7 +26,7 @@
 | AI | DeepSeek API（compatible OpenAI SDK）| deepseek-v4-flash 日常 / deepseek-v4-pro 深度 |
 | 邮件 | Nodemailer + Gmail SMTP | 注册邮箱验证码，开发环境可降级为控制台打印 |
 | 版本对比 | diff 库（动态 import）| CommonJS 注意 |
-| Markdown | react-markdown + remark-gfm + @tailwindcss/typography | 编辑器双栏预览 + 社区内容渲染 |
+| Markdown | react-markdown + remark-gfm + @tailwindcss/typography + rehype-highlight | 编辑器双栏预览 + 社区内容渲染 + 代码语法高亮 |
 | 包管理 | pnpm | |
 | 端口 | **3722**（固定） | `next dev -p 3722` |
 
@@ -44,18 +44,20 @@ whatisthat/
 │   │   ├── api/                         # ~18 个 RESTful 端点
 │   │   ├── layout.tsx, page.tsx, globals.css
 │   ├── components/
-│   │   ├── ui/           # Button, Card, Input, Textarea, Modal, Badge, Spinner
+│   │   ├── ui/           # Button, Card, Input, Textarea, Modal, Badge, Spinner, Tooltip, DropdownMenu, Toast, Toggle, QuickSwitcher
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
-│   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter
+│   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
 │   │   ├── ai/           # ChatPanel
 │   │   └── markdown/     # MarkdownToolbar, MarkdownPreview, WritingStats
+│   ├── hooks/            # useAutoSave, useDraftRecovery, useRelativeTime
 │   └── lib/
 │       ├── db/           # schema.ts, init.ts (sql.js), queries/{notes,versions,tags,posts,comments}.ts
 │       ├── auth/         # NextAuth 配置, session.ts, utils.ts
 │       ├── ai/           # DeepSeek client.ts, conversation.ts
 │       ├── email/        # send.ts (nodemailer + Gmail SMTP)
-│       └── version/      # diff.ts
+│       ├── version/      # diff.ts
+│       └── export.ts     # 导出 Markdown / PDF
 ├── data/                 # SQLite 数据库文件（gitignore）
 ├── scripts/              # 一次性脚本（gitignore）
 ├── .claude/CLAUDE.md     # UI 设计规范
@@ -72,7 +74,7 @@ whatisthat/
 | 表 | 核心字段 | 说明 |
 |----|---------|------|
 | users | id, email, name, password_hash, **email_verified** | bcrypt 12轮，email_verified NULL=未验证 |
-| notes | id, user_id, title, current_version_id, is_public | |
+| notes | id, user_id, title, current_version_id, is_public, **is_pinned**, **deleted_at**, **description**, **cover_image_url**, **icon**, **last_saved_at** | 🆕 6 个阶段二新字段 |
 | note_versions | id, note_id, user_id, version_number, content, commit_message | 不可变历史 |
 | tags | id, name (UNIQUE) | |
 | note_tags | note_id, tag_id (复合主键) | 多对多 |
@@ -92,7 +94,7 @@ whatisthat/
 | POST | /api/auth/register | 否 | 注册 → 发验证邮件 |
 | **GET** 🆕 | **/api/auth/verify?token=** | 否 | **邮箱验证** |
 | GET/POST | /api/notes | 是 | |
-| GET/PATCH/DELETE | /api/notes/[id] | 是 | PATCH 支持 tags |
+| GET/PATCH/**PUT**/DELETE | /api/notes/[id] | 是 | PATCH 支持 tags/pin/description/icon；**PUT ?action=restore 恢复**；DELETE 软删除 |
 | GET/POST | /api/notes/[id]/versions | 是 | |
 | GET | /api/notes/[id]/versions/[vid] | 是 | |
 | GET | /api/notes/[id]/versions/diff?a=&b= | 是 | |
@@ -136,7 +138,22 @@ whatisthat/
 - [x] **移动端响应式** 🆕 — 侧边栏→抽屉汉堡菜单、卡片单列、表单堆叠、TagFilter 横向滚动
 - [x] **数据安全** 🆕 — 测试数据清理必须先备份 + SQL DELETE 精确删除，禁止 rm -f 删库
 - [x] **UI 审美全面优化** 🆕 — 22 文件重构：stone 暖灰配色、emerald 柔光聚焦、卡片悬浮微交互、8 套 CSS 动画、即时表单校验、移动端底部 Tab 栏 + 抽屉侧边栏、时间轴版本历史、无障碍支持（prefers-reduced-motion/ARIA）→ [DESIGN_PLAN.md](DESIGN_PLAN.md) + [INTERACTION_PLAN.md](INTERACTION_PLAN.md) + [UI_OPTIMIZATION_SUMMARY.md](UI_OPTIMIZATION_SUMMARY.md)
-- [x] **Markdown 编辑器** 🆕 — 双栏实时预览（左编辑右预览）、11 按钮格式化工具栏（B/I/H/列表/代码/引用/链接/分隔线）、Ctrl+B/I/K 光标插入快捷键、实时写作统计（字符/中英混合字数/阅读时间）、react-markdown + GFM 表格/删除线/任务列表 → [MarkdownToolbar.tsx](src/components/markdown/MarkdownToolbar.tsx) + [MarkdownPreview.tsx](src/components/markdown/MarkdownPreview.tsx) + [WritingStats.tsx](src/components/markdown/WritingStats.tsx)
+- [x] **Markdown 编辑器** — 双栏实时预览、11→15 按钮工具栏、Ctrl+B/I/K 快捷键、写作统计
+- [x] **编辑器专业化升级** 🆕 — 13 项新功能 + 6 个 Schema 新列：
+  - ⏱ **自动保存** — 停笔 2 秒自动创建版本（commitMessage="自动保存"），状态栏实时指示
+  - 📝 **草稿恢复** — localStorage 防抖保存 + 恢复/丢弃提示 banner
+  - 🧘 **禅模式** — F11 全屏写作，隐藏所有 UI 干扰，Escape 退出
+  - 📑 **目录导航** — 解析标题生成层级 TOC，点击跳转，IntersectionObserver 高亮当前章节
+  - ⚡ **斜杠命令** — 输入 `/` 弹出 16 条分组命令面板，↑↓ 导航，Enter 选择，光标插入定位
+  - 🔍 **快速切换器** — Ctrl+P 全局搜索笔记+标签，键盘导航，即时跳转
+  - 📥 **导出** — 一键下载 .md 文件 / 浏览器打印 PDF + print CSS
+  - 🎨 **代码语法高亮** — rehype-highlight + 自定义 stone/emerald 主题
+  - 📌 **置顶** — 笔记列表 pin 排序 + 编辑器内一键切换
+  - 🗑 **回收站** — 软删除（deleted_at）+ 恢复 API
+  - 📝 **描述** — 笔记副标题/描述字段，blur 自动保存
+  - 🎨 **封面/图标** — cover_image_url + icon 字段（icon 支持 emoji）
+  - 🕐 **最近保存时间** — last_saved_at 字段，每次保存自动更新
+  - 🧱 **4 个新 UI 组件** — Tooltip、DropdownMenu、Toast（Provider+hook）、Toggle
 
 ---
 
@@ -147,7 +164,7 @@ whatisthat/
 3. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px；编辑器使用 font-mono
 4. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px
 5. **圆角**：8px→16px（rounded-lg→rounded-2xl 卡片），按钮/输入框 8px
-6. **动画**：8 套 CSS @keyframes（fadeInUp, slideInRight, breatheGlow, shimmer, typingDot, inkSpread, successPop）+ stagger 延迟入场 + prefers-reduced-motion 支持
+6. **动画**：11 套 CSS @keyframes（fadeInUp, slideInRight, slideInLeft, breatheGlow, shimmer, typingDot, inkSpread, successPop, **toastIn**, **scaleIn**）+ stagger 延迟入场 + zen-mode 全屏 CSS + print 打印样式 + prefers-reduced-motion 支持
 7. **留白**：区块间 ≥24px
 
 ---
@@ -204,6 +221,7 @@ whatisthat/
 5. sql.js `Buffer.from(Uint8Array)` 数据损坏，需逐字节复制
 6. Next.js HMR 编译后模块级 `_db` 缓存可能过期，重启服务可解决
 7. `skills-installer` 在 Windows 下 TTY 不兼容（`uv_tty_init EBADF`），交互操作不可用
+8. `rehype-highlight` 无自带 CSS，需手动定义 highlight.js 主题类名（.hljs-*）
 
 ---
 
