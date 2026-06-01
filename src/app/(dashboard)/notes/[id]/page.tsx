@@ -137,7 +137,7 @@ export default function NoteDetailPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* 顶部导航栏 */}
       <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <button

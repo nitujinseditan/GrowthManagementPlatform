@@ -30,7 +30,7 @@ export default function NewNotePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">新建笔记</h1>
       <Card className="p-6">
         <NoteEditor note={null} onSave={handleSave} saving={saving} />

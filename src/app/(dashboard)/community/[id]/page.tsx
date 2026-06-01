@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import CommentSection from "@/components/community/CommentSection";
 import Spinner from "@/components/ui/Spinner";
+import { MarkdownPreview } from "@/components/markdown";
 import type { Post } from "@/types";
 
 export default function PostDetailPage() {
@@ -93,9 +94,7 @@ export default function PostDetailPage() {
 
         {noteContent && (
           <div className="border-t border-stone-100 pt-4 mt-4">
-            <div className="prose prose-sm max-w-none whitespace-pre-wrap text-stone-700 leading-relaxed">
-              {noteContent}
-            </div>
+            <MarkdownPreview content={noteContent} />
           </div>
         )}
       </Card>

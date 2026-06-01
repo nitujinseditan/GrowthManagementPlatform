@@ -195,6 +195,27 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+/* ===== prose 样式暗色模式适配 ===== */
+
+@media (prefers-color-scheme: dark) {
+  .prose {
+    --tw-prose-body: #fafaf9;
+    --tw-prose-headings: #fafaf9;
+    --tw-prose-links: #34d399;
+    --tw-prose-bold: #fafaf9;
+    --tw-prose-counters: #a8a29e;
+    --tw-prose-bullets: #a8a29e;
+    --tw-prose-hr: #44403c;
+    --tw-prose-quotes: #d6d3d1;
+    --tw-prose-quote-borders: #34d399;
+    --tw-prose-code: #fafaf9;
+    --tw-prose-pre-code: #e2e8f0;
+    --tw-prose-pre-bg: #0f172a;
+    --tw-prose-th-borders: #44403c;
+    --tw-prose-td-borders: #44403c;
+  }
+}
+
 /* ===== 动效减弱支持 ===== */
 
 @media (prefers-reduced-motion: reduce) {
