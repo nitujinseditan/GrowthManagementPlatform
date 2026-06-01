@@ -54,20 +54,29 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
 
   // 创建项目
   const handleCreate = async () => {
-    if (!newName.trim()) return;
+    const name = newName.trim();
+    if (!name) {
+      setCreating(false);
+      return;
+    }
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
+        body: JSON.stringify({ name }),
       });
       if (res.ok) {
         setNewName("");
         setCreating(false);
         fetchProjects();
         onChange?.();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        console.error("创建项目失败:", data.error || res.statusText);
       }
-    } catch { /* 静默 */ }
+    } catch (err) {
+      console.error("创建项目失败:", err);
+    }
   };
 
   // 重命名项目
@@ -226,7 +235,7 @@ export default function ProjectTree({ projects: externalProjects, onChange }: Pr
               if (e.key === "Enter") handleCreate();
               if (e.key === "Escape") { setCreating(false); setNewName(""); }
             }}
-            onBlur={() => { if (!newName.trim()) setCreating(false); }}
+            onBlur={() => { handleCreate(); }}
             placeholder="项目名称..."
             className="h-7 text-xs px-2 py-0"
             autoFocus
