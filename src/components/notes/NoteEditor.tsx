@@ -41,7 +41,22 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
   const [tagInput, setTagInput] = useState("");
   const [saved, setSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [zenMode, setZenMode] = useState(false);
+  const zenModeRef = useRef(false);
+  zenModeRef.current = zenMode;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 禅模式：切换 body class
+  useEffect(() => {
+    if (zenMode) {
+      document.body.classList.add("zen-mode");
+    } else {
+      document.body.classList.remove("zen-mode");
+    }
+    return () => {
+      document.body.classList.remove("zen-mode");
+    };
+  }, [zenMode]);
 
   // 自动保存（仅当 onAutoSave 提供且 title 非空时启用）
   const autoSave = onAutoSave
@@ -140,6 +155,20 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
         return;
       }
 
+      // F11 或 Ctrl+Shift+F → 禅模式
+      if (e.key === "F11" || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "f")) {
+        e.preventDefault();
+        setZenMode((prev) => !prev);
+        return;
+      }
+
+      // Escape → 退出禅模式
+      if (e.key === "Escape" && zenModeRef.current) {
+        e.preventDefault();
+        setZenMode(false);
+        return;
+      }
+
       // 以下快捷键仅在 Textarea 聚焦时生效
       if (!isTextareaFocused) return;
 
@@ -220,30 +249,55 @@ export default function NoteEditor({ note, onSave, saving, onAutoSave }: NoteEdi
         className="text-xl font-semibold border-transparent hover:border-stone-200 focus:border-emerald-400 px-0 !rounded-none !shadow-none focus:!shadow-none !bg-transparent"
       />
 
-      {/* 移动端预览切换按钮 */}
-      <div className="lg:hidden flex items-center gap-2">
+      {/* 移动端预览切换按钮 + 禅模式按钮 */}
+      <div className="flex items-center gap-2">
+        <div className="lg:hidden flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-emerald-600
+                       px-3 py-1.5 rounded-lg border border-stone-200 bg-white transition-colors"
+          >
+            {showPreview ? (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                显示预览
+              </>
+            ) : (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                仅编辑
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* 禅模式切换按钮 */}
         <button
           type="button"
-          onClick={() => setShowPreview(!showPreview)}
-          className="flex items-center gap-1.5 text-xs text-stone-400 hover:text-emerald-600
-                     px-3 py-1.5 rounded-lg border border-stone-200 bg-white transition-colors"
+          onClick={() => setZenMode(!zenMode)}
+          title={zenMode ? "退出禅模式 (F11)" : "禅模式 (F11)"}
+          className={`hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border
+                       transition-colors
+                       ${
+                         zenMode
+                           ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                           : "text-stone-400 hover:text-stone-600 border-stone-200 bg-white"
+                       }`}
         >
-          {showPreview ? (
-            <>
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              显示预览
-            </>
-          ) : (
-            <>
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              仅编辑
-            </>
-          )}
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {zenMode ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            )}
+          </svg>
+          {zenMode ? "退出禅模式" : "禅模式"}
         </button>
       </div>
 

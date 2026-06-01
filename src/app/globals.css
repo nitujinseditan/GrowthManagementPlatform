@@ -259,3 +259,46 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a29e;
 }
+
+/* ===== 禅模式（全屏写作）===== */
+
+body.zen-mode .sidebar-desktop,
+body.zen-mode .mobile-header,
+body.zen-mode .mobile-tab-bar,
+body.zen-mode [data-zen-hide] {
+  display: none !important;
+}
+
+body.zen-mode .editor-container {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 40 !important;
+  background: var(--bg-primary) !important;
+  padding: 2rem !important;
+  max-width: 100% !important;
+  overflow-y: auto !important;
+}
+
+body.zen-mode .editor-inner {
+  max-width: 56rem !important;
+  margin: 0 auto !important;
+}
+
+/* 打印样式 */
+@media print {
+  .sidebar-desktop,
+  .mobile-header,
+  .mobile-tab-bar,
+  [data-print-hide],
+  nav,
+  button:not(.print-keep) {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .prose {
+    max-width: 100% !important;
+  }
+}
