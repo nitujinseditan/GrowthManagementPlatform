@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Sidebar from "./Sidebar";
 import { ToastProvider } from "@/components/ui/Toast";
+import QuickSwitcher from "@/components/ui/QuickSwitcher";
 
 interface DashboardShellProps {
   userName?: string;
@@ -16,12 +17,25 @@ export default function DashboardShell({
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const pathname = usePathname();
 
   // 切换路由时自动关闭移动端侧边栏
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Ctrl+P 快速切换器
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+        e.preventDefault();
+        setSwitcherOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   // 移动端底部 Tab 栏配置
   const mobileTabs = [
@@ -119,6 +133,7 @@ export default function DashboardShell({
         </nav>
       </main>
       </div>
+      <QuickSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
     </ToastProvider>
   );
 }
