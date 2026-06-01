@@ -40,7 +40,7 @@ export default function Sidebar({ userName, onClose }: SidebarProps) {
   };
 
   return (
-    <aside className="w-56 min-h-screen border-r border-stone-200 bg-stone-50/50 flex flex-col">
+    <aside className="w-56 min-h-screen border-r border-stone-200/80 bg-stone-50 flex flex-col">
       {/* 品牌区 */}
       <div className="p-4 border-b border-stone-200/60 flex items-center justify-between">
         <Link
@@ -81,7 +81,7 @@ export default function Sidebar({ userName, onClose }: SidebarProps) {
           >
             {/* 左侧激活指示条 */}
             {link.active && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-emerald-500 rounded-full" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-emerald-500 rounded-r-full" />
             )}
             <span className={link.active ? "text-emerald-600" : "text-stone-400 group-hover:text-stone-500 transition-colors"}>
               {link.icon}

@@ -10,7 +10,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+          "border-transparent bg-accent text-accent-foreground hover:bg-accent/80",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
@@ -36,6 +36,7 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 
 // ═══════════════════════════════════════════
 // 向后兼容：旧版 Badge API (variant="primary"|"secondary"|"danger", removable, onRemove)
+// Phase 4 重写 NoteEditor 后删除
 // ═══════════════════════════════════════════
 
 type LegacyVariant = "primary" | "secondary" | "danger";
@@ -59,11 +60,11 @@ function LegacyBadge({
       className={cn(
         "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
         variant === "primary" &&
-          "bg-emerald-50 text-emerald-700 border border-emerald-200",
+          "bg-emerald-50 text-emerald-700 border border-emerald-200/60",
         variant === "secondary" &&
-          "bg-stone-100 text-stone-600 border border-stone-200",
+          "bg-stone-100 text-stone-600 border border-stone-200/60",
         variant === "danger" &&
-          "bg-red-50 text-red-600 border border-red-200",
+          "bg-red-50 text-red-600 border border-red-200/60",
         className
       )}
       {...props}

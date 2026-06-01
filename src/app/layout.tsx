@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className="antialiased bg-gray-50 text-gray-900 font-sans">
+      <body className="antialiased bg-stone-50 text-stone-900 font-sans">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

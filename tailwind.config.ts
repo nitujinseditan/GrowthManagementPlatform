@@ -54,6 +54,11 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        normal: "var(--duration-normal)",
+        slow: "var(--duration-slow)",
+      },
       keyframes: {
         "fade-in-up": {
           from: { opacity: "0", transform: "translateY(12px)" },
@@ -112,17 +117,17 @@ const config: Config = {
         DEFAULT: {
           css: {
             maxWidth: "none",
-            color: "#1c1917", // stone-900
+            color: "hsl(var(--foreground))",
             fontSize: "0.875rem",
             lineHeight: "1.75",
             a: {
-              color: "#10b981",
-              "&:hover": { color: "#059669" },
+              color: "hsl(var(--primary))",
+              "&:hover": { color: "hsl(var(--primary) / 0.8)" },
             },
-            strong: { color: "#1c1917" },
+            strong: { color: "hsl(var(--foreground))" },
             code: {
-              color: "#1c1917",
-              backgroundColor: "#f5f5f4",
+              color: "hsl(var(--foreground))",
+              backgroundColor: "hsl(var(--muted))",
               padding: "0.2em 0.4em",
               borderRadius: "0.25rem",
               fontWeight: "400",
@@ -137,25 +142,18 @@ const config: Config = {
               padding: "1rem",
             },
             blockquote: {
-              borderLeftColor: "#10b981",
-              color: "#78716c",
+              borderLeftColor: "hsl(var(--primary))",
+              color: "hsl(var(--muted-foreground))",
               fontStyle: "normal",
             },
-            h1: { color: "#1c1917", fontWeight: "700" },
-            h2: { color: "#1c1917", fontWeight: "600" },
-            h3: { color: "#1c1917", fontWeight: "600" },
-            h4: { color: "#1c1917", fontWeight: "600" },
-            hr: { borderColor: "#e7e5e4" },
-            table: {
-              fontSize: "0.8125rem",
-            },
-            th: {
-              color: "#1c1917",
-              fontWeight: "600",
-            },
-            img: {
-              borderRadius: "0.5rem",
-            },
+            h1: { color: "hsl(var(--foreground))", fontWeight: "700" },
+            h2: { color: "hsl(var(--foreground))", fontWeight: "600" },
+            h3: { color: "hsl(var(--foreground))", fontWeight: "600" },
+            h4: { color: "hsl(var(--foreground))", fontWeight: "600" },
+            hr: { borderColor: "hsl(var(--border))" },
+            table: { fontSize: "0.8125rem" },
+            th: { color: "hsl(var(--foreground))", fontWeight: "600" },
+            img: { borderRadius: "0.5rem" },
           },
         },
       },

@@ -8,7 +8,7 @@ export default function PostCard({ post }: { post: Post }) {
 
   return (
     <Link href={`/community/${post.id}`}>
-      <Card hover className="p-5 h-full flex flex-col gap-3">
+      <Card className="p-5 h-full flex flex-col gap-3 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
         {/* 作者行 */}
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-medium text-emerald-700 shrink-0">

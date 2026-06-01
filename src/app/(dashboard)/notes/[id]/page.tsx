@@ -346,7 +346,7 @@ export default function NoteDetailPage() {
               {t.label}
             </span>
             {tab === t.key && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 rounded-full" />
+              <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-emerald-500 rounded-t-full" />
             )}
           </button>
         ))}

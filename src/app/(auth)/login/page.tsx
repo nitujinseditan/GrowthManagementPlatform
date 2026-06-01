@@ -82,7 +82,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button type="submit" variant="gradient" disabled={loading} className="w-full">
           {loading ? (
             <span className="flex items-center gap-2">
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">

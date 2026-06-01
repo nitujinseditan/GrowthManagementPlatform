@@ -1,6 +1,6 @@
 # 成长第二大脑 — 项目摘要
 
-> 最后更新：2026-06-01（自动保存→退出提醒 + 设计系统 shadcn/ui + HSL 令牌）
+> 最后更新：2026-06-01（Phase 1-2 前端重构：设计令牌统一 + shadcn/ui 组件标准化）
 > GitHub: https://github.com/nitujinseditan/GrowthManagementPlatform
 > 分支: main
 > 端口: 3722
@@ -44,7 +44,7 @@ whatisthat/
 │   │   ├── api/                         # ~18 个 RESTful 端点
 │   │   ├── layout.tsx, page.tsx, globals.css
 │   ├── components/
-│   │   ├── ui/           # shadcn/ui 组件: Button, Card, Input, Textarea, Badge, Dialog, DropdownMenu, Toast, Toaster, Tooltip, Tabs, Separator, Skeleton + 自定义: Modal, Spinner, Toggle, QuickSwitcher
+│   │   ├── ui/           # shadcn/ui 标准组件: button, card, input, textarea, badge, dialog, dropdown-menu, tabs, toast, toaster, tooltip, separator, skeleton, avatar, progress, scroll-area, toggle + 自定义: Spinner, QuickSwitcher
 │   │   ├── layout/       # Sidebar, AuthGuard, SessionProvider, DashboardShell
 │   │   ├── notes/        # NoteEditor, VersionHistory, DiffView, NoteCard, TagFilter, TableOfContents, SlashCommandMenu, slashCommands
 │   │   ├── community/    # PostCard, CommentSection, PublishDialog
@@ -161,16 +161,19 @@ whatisthat/
 
 ## 八、UI 设计规范（必须遵守）
 
-1. **组件库**：使用 shadcn/ui（Radix 原语 + cva variants），`src/components/ui/` 目录；自定义组件用 `cn()` 合并类名
-2. **设计令牌（HSL）**：所有颜色通过 CSS 变量引用（`--primary`, `--secondary`, `--muted`, `--accent`, `--background`, `--foreground` 等），Tailwind 用 `bg-primary`/`text-muted-foreground` 语义类
-3. **极简暖灰**：背景 `hsl(var(--background))` (#fafaf9 stone-50)，主按钮 `hsl(var(--primary))` (emerald #10b981)
-4. **柔光聚焦**：输入框 focus 使用 `focus-visible:ring-2 focus-visible:ring-ring` (shadcn 标准)，卡片悬浮 `hover:shadow-lg hover:-translate-y-1`
-5. **字体**：system-ui, -apple-system, Inter，行距 1.5，字号 ≥14px；编辑器使用 font-mono
-6. **间距**：8px 基数（4,8,16,24,32），卡片内边距 ≥16px（shadcn Card: p-6）
-7. **圆角**：8px 基数（rounded-lg），卡片 rounded-xl，按钮/输入框 rounded-md
-8. **动画**：Tailwind 配置集中注册 11 套 @keyframes + animate-* 工具类 + stagger 延迟 + zen-mode + print + prefers-reduced-motion
-9. **留白**：区块间 ≥24px
-10. **移动端**：触摸目标 ≥44px，底部 Tab 栏 fixed，侧边栏→抽屉
+> 📐 详见 [DESIGN_PLAN.md](DESIGN_PLAN.md) v3 — Notion 级别专业质感设计规范
+
+1. **组件库**：shadcn/ui（Radix 原语 + cva variants），`src/components/ui/` 目录；禁止自建与 shadcn 同名组件
+2. **设计令牌（HSL）**：所有颜色通过 CSS 变量引用（`--primary`, `--secondary`, `--muted`, `--accent`, `--background`, `--foreground` 等），**禁止硬编码色值**
+3. **极简暖灰**：背景 stone-50，主按钮 emerald，文字 stone 色系
+4. **柔光聚焦**：输入框 focus 使用 `focus-visible:border-emerald-400 focus-visible:shadow-[0_0_0_3px_rgba(16,185,129,0.15)]`，卡片悬浮 `hover:shadow-md hover:-translate-y-0.5`
+5. **按钮交互**：`active:scale-[0.97]` 点击弹性反馈，主按钮 `variant="gradient"` emerald 渐变
+6. **字体**：system-ui, -apple-system, Inter，正文 14px/1.6，代码 font-mono 13px
+7. **间距**：4px 网格（4,8,12,16,24,32），卡片内边距 16px
+8. **圆角**：按钮/输入框 rounded-md (6px)，卡片 rounded-xl (12px)，标签 rounded-full
+9. **阴影**：sm/md/lg/xl 四级，禁止彩色阴影（主按钮除外）
+10. **动画**：150-400ms，支持 prefers-reduced-motion
+11. **移动端**：触摸目标 ≥44px，底部 Tab 栏 fixed + safe-area，侧边栏→抽屉
 
 ---
 
@@ -206,7 +209,21 @@ whatisthat/
 
 ---
 
-## 十二、待办
+## 十二、前端重构进度（Notion 级别升级）
+
+| Phase | 内容 | 状态 |
+|-------|------|------|
+| Phase 1 | 设计令牌系统 — globals.css HSL 令牌 + tailwind.config.ts CSS 变量引用 | ✅ 完成 |
+| Phase 2 | shadcn/ui 组件标准化 — Button/Card/Input/Textarea/Badge 替换 + Modal/DropdownMenu/Toggle 删除 + avatar/progress/scroll-area/toggle 安装 | ✅ 完成 |
+| Phase 3 | 布局重构 — Sidebar shadcn 化 + 移动端优化 | ⏳ 待做 |
+| Phase 4 | Novel 编辑器集成 — Tiptap 富文本 + 双格式存储 + 图片上传 | ⏳ 待做 |
+| Phase 5 | 项目树管理 — projects 表 + 侧边栏内嵌树 + API | ⏳ 待做 |
+| Phase 6 | 目录索引 — Novel 编辑器实时标题提取 + 跳转 | ⏳ 待做 |
+| Phase 7 | 动画与细节打磨 | ⏳ 待做 |
+
+---
+
+## 十三、待办（其他）
 
 - [ ] PWA 支持
 - [ ] Docker 部署配置
@@ -217,7 +234,7 @@ whatisthat/
 
 ---
 
-## 十三、已知技术债务
+## 十四、已知技术债务
 
 1. `diff` 库 CommonJS，构建 `Cannot set properties of undefined` 警告（运行时正常）
 2. `/api/posts` 使用 searchParams，预渲染 DYNAMIC_SERVER_USAGE 警告（运行时正常）
@@ -230,7 +247,7 @@ whatisthat/
 
 ---
 
-## 十四、AI 协作规则摘要
+## 十五、AI 协作规则摘要
 
 详见 [CLAUDE.md](CLAUDE.md)，核心要点：
 
@@ -243,7 +260,7 @@ whatisthat/
 
 ---
 
-## 十五、环境变量（.env.local）
+## 十六、环境变量（.env.local）
 
 ```
 DATABASE_URL=file:./data/growth-second-brain.db
@@ -257,7 +274,7 @@ EMAIL_PASS=<应用专用密码>
 EMAIL_FROM=lushizuo722@gmail.com
 ```
 
-## 十六、启动
+## 十七、启动
 
 ```bash
 pnpm dev        # http://localhost:3722
